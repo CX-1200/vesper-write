@@ -197,6 +197,22 @@ export async function storeFailure(ctx: AppContext, id: string, errorCode: strin
   return exists ? 'wrong_state' : 'not_found';
 }
 
+/** §6.1 'vm_rejected': the VM reported R8 for this ticket; fail it at once so it is never handed out again. */
+export async function failRejectedByVm(ctx: AppContext, id: string, errorCode: string): Promise<boolean> {
+  const now = ctx.now();
+  const [r] = await ctx.db.batch([
+    {
+      sql: `UPDATE tickets SET status = 'failed', lease_until = NULL, error_code = ?, finished_at = CAST(? AS INTEGER)
+            WHERE id = ? AND status IN ('processing', 'pending')
+            RETURNING id`,
+      params: [errorCode, now, id],
+    },
+  ]);
+  if (!r?.rows[0]) return false;
+  await ctx.db.batch([auditStatement(ctx, { event: 'ticket.status', actor: 'vm', result: 'fail', detail: { ticket: id, to: 'failed', error: errorCode } })]);
+  return true;
+}
+
 export async function markReviewOutcome(ctx: AppContext, id: string, outcome: 'used' | 'rejected', actor: string): Promise<FinishResult> {
   const now = ctx.now();
   const extra = outcome === 'used' ? ', used_at = CAST(?1 AS INTEGER)' : '';

@@ -1,0 +1,6 @@
+{
+  "general": { "model": "claude-haiku-5-5", "template": "templates/general.md", "max_output_chars": 6000, "typical_chars": 2500 },
+  "coding": { "model": "claude-haiku-5-5", "template": "templates/coding.md", "max_output_chars": 8000, "typical_chars": 3500 },
+  "writing": { "model": "claude-haiku-5-5", "template": "templates/writing.md", "max_output_chars": 5000, "typical_chars": 2000 },
+  "research": { "model": "claude-haiku-5-5", "template": "templates/research.md", "max_output_chars": 6000, "typical_chars": 2500 }
+}

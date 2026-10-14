@@ -89,6 +89,8 @@ export const TICKET_ERROR_LABEL: Record<string, string> = {
   bad_template_path: '模板路径不合法',
   unknown_type: 'VM 上没有这个 ticket 类型',
   device_revoked: '设备已撤销',
+  vm_rejected: 'VM 拒绝处理（签名无效或设备不可信，R8）',
+  lease_timeout: '处理超时（worker 没有回报）',
   worker_not_processing: 'worker 未处理',
   worker_error: 'worker 错误',
 };

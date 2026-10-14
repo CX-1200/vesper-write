@@ -16,7 +16,7 @@ import { notify } from '../notify.ts';
 import { getOwner, setupTokenValid } from '../owner.ts';
 import { hashSecret, ARGON2_TOKEN } from '../server-crypto.ts';
 import { deviceEncJwk, deviceSignJwk, getDevice, pendingDevices } from '../devices.ts';
-import { claimTickets, failTicketsOfDevice, runMaintenance, storeFailure, storeResult } from '../tickets.ts';
+import { claimTickets, failRejectedByVm, failTicketsOfDevice, runMaintenance, storeFailure, storeResult } from '../tickets.ts';
 import type { AppContext } from '../context.ts';
 
 // POST /api/worker/register — exception: setup token only (+ the request is signed by the VM key being registered).
@@ -250,6 +250,10 @@ export async function handleWorkerAlert(req: Request, ctx: AppContext): Promise<
   }
   await run(ctx.db, 'UPDATE vm_identity SET latched = 1 WHERE id = 1');
   await raiseAlert(ctx, { rule: 'R8', severity: 'high', ip: a.ip, country: a.country, reason });
-  if (ticketId) await audit(ctx, { event: 'vm.r8', actor: 'vm', result: 'fail', ip: a.ip, detail: { ticket: ticketId, reason } });
+  if (ticketId) {
+    await audit(ctx, { event: 'vm.r8', actor: 'vm', result: 'fail', ip: a.ip, detail: { ticket: ticketId, reason } });
+    // The VM refused this ticket: fail it now, so that after a manual recovery it is not handed out (and refused) again.
+    await failRejectedByVm(ctx, ticketId, 'vm_rejected');
+  }
   return json({ ok: true });
 }

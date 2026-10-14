@@ -5,7 +5,7 @@
 //     │   ▲         │                │
 //     │   └─(lease expired)          ├──▶ rejected
 //     │             │                └──▶ expired (now > expires_at)
-//     │             └──▶ failed (attempts ≥ 3)
+//     │             └──▶ failed (attempts ≥ 3, or the VM rejected it: R8)
 //     ├──▶ stale (now > stale_at while still pending)
 //     └──▶ frozen (system not NORMAL; v2)
 
@@ -42,6 +42,8 @@ export type TicketEvent =
   | { type: 'claim'; now: number }
   | { type: 'result_ok'; now: number; processedAt: number }
   | { type: 'result_fail'; now: number; errorCode: string }
+  /** The VM (trust root) refused the ticket as forged or untrusted (R8): it must never be handed out again. */
+  | { type: 'vm_rejected'; now: number; errorCode: string }
   | { type: 'mark_used'; now: number }
   | { type: 'reject'; now: number }
   | { type: 'freeze'; now: number }
@@ -123,6 +125,9 @@ export function applyTicketEvent(t: TicketState, ev: TicketEvent, cfg: TicketCon
           ? { ...s, status: 'failed', lease_until: null, error_code: ev.errorCode }
           : { ...s, status: 'pending', lease_until: null, error_code: ev.errorCode },
       );
+    case 'vm_rejected':
+      if (s.status !== 'processing' && s.status !== 'pending') return fail('not_open');
+      return ok({ ...s, status: 'failed', lease_until: null, error_code: ev.errorCode });
     case 'mark_used':
       if (s.status !== 'awaiting_review') return fail(s.status === 'expired' ? 'expired' : 'not_awaiting_review');
       return ok({ ...s, status: 'used' });

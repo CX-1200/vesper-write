@@ -10,4 +10,5 @@ export * from './schemas.ts';
 export * from './sign.ts';
 export * from './system-state.ts';
 export * from './ticket-state.ts';
+export * from './ticket-types.ts';
 export * from './time.ts';

@@ -1,6 +1,7 @@
 # /etc/systemd/system/vesper-selftest.service
-# Vesper worker. Every sandbox line is explained in vm-setup/06-worker-service.md.
-# Check the hardening score with: systemd-analyze security vesper-worker
+# Vesper self-test: one harmless `claude -p` request with exactly the worker's
+# sandbox, credentials and proxy (vm-setup/08-worker-service.md).
+# Run it with: sudo systemctl start vesper-selftest && journalctl -u vesper-selftest -n 20
 
 [Unit]
 Description=Vesper self-test (one harmless claude -p request with the worker sandbox)
@@ -32,8 +33,11 @@ NoNewPrivileges=yes
 CapabilityBoundingSet=
 AmbientCapabilities=
 ProtectSystem=strict
-ProtectHome=read-only
-ReadWritePaths=/home/vesper/.local/share/vesper
+# /home becomes an empty tmpfs; only these two paths are mounted back in:
+# the content repo read-only, the worker's own data directory read-write.
+ProtectHome=tmpfs
+BindReadOnlyPaths=/home/vesper/vesper-content
+BindPaths=/home/vesper/.local/share/vesper
 PrivateTmp=yes
 PrivateDevices=yes
 ProtectKernelTunables=yes
@@ -53,9 +57,13 @@ SystemCallArchitectures=native
 SystemCallFilter=@system-service
 SystemCallFilter=~@privileged @resources
 SystemCallErrorNumber=EPERM
-# Network: only loopback (the local proxy). The proxy decides which domains are reachable.
+# Network: only the local proxy on 127.0.0.1. The proxy decides which domains are reachable.
 IPAddressDeny=any
-IPAddressAllow=localhost
+IPAddressAllow=127.0.0.1
+# No name resolution at all inside the sandbox (the proxy resolves host names):
+# hide systemd-resolved's local socket and the D-Bus system bus, so DNS cannot
+# be used as a side channel even through a local daemon.
+InaccessiblePaths=-/run/systemd/resolve -/run/dbus/system_bus_socket
 
 TimeoutStopSec=30
 

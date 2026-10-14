@@ -104,6 +104,22 @@ test('ticket: pending → stale after OD7; processing is not stale until it fall
   assert.equal(r.ok, false);
 });
 
+test('ticket: the VM rejecting a ticket (R8) fails it at once, from pending or processing only', () => {
+  const pending = newTicketState(T0, cfg);
+  const fromPending = mustOk(applyTicketEvent(pending, { type: 'vm_rejected', now: T0 + 1, errorCode: 'vm_rejected' }, cfg));
+  assert.equal(fromPending.status, 'failed');
+  assert.equal(fromPending.error_code, 'vm_rejected');
+  const processing = mustOk(applyTicketEvent(pending, { type: 'claim', now: T0 + 1 }, cfg));
+  const fromProcessing = mustOk(applyTicketEvent(processing, { type: 'vm_rejected', now: T0 + 2, errorCode: 'vm_rejected' }, cfg));
+  assert.deepEqual([fromProcessing.status, fromProcessing.lease_until], ['failed', null]);
+  // it can never be claimed again
+  assert.equal(applyTicketEvent(fromProcessing, { type: 'claim', now: T0 + 3 }, cfg).ok, false);
+  // a ticket that already has a result is not affected
+  const done = mustOk(applyTicketEvent(processing, { type: 'result_ok', now: T0 + 2, processedAt: T0 + 2 }, cfg));
+  const r = applyTicketEvent(done, { type: 'vm_rejected', now: T0 + 3, errorCode: 'vm_rejected' }, cfg);
+  assert.equal(r.ok, false);
+});
+
 test('ticket: freeze / unfreeze (SUSPICIOUS) and frozen tickets are not claimable', () => {
   const t = newTicketState(T0, cfg);
   const frozen = mustOk(applyTicketEvent(t, { type: 'freeze', now: T0 + 1 }, cfg));

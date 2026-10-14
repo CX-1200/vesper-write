@@ -84,6 +84,8 @@ test('acceptance 4: a forged ticket inserted into the DB is refused, the VM latc
   await h.flush();
   assert.equal((await h.sql("SELECT rule FROM alerts WHERE rule = 'R8'")).length, 1);
   assert.ok(h.pushes.some((p) => p.payload.k === 'alert'));
+  // the refused ticket is failed on Vercel right away, so it can never be handed out again
+  assert.deepEqual(await h.sql('SELECT status, error_code, lease_until FROM tickets WHERE id = ?', [b.id]), [{ status: 'failed', error_code: 'vm_rejected', lease_until: null }]);
   // a legitimate ticket afterwards is NOT processed while the latch exists, although Vercel says NORMAL
   const ok = await phone.createTicket({ raw: 'legit' });
   assert.equal(ok.status, 201);

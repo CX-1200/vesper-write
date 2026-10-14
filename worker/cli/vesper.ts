@@ -12,6 +12,7 @@ import {
   cmdDeviceRevoke,
   cmdFingerprint,
   cmdInit,
+  cmdContentCheck,
   cmdLatch,
   cmdStatus,
   type CliEnv,
@@ -77,7 +78,8 @@ const HELP = `用法：
   vesper device list             列出可信、已撤销与待批准的设备
   vesper device approve [ID]     比对指纹后批准一台设备
   vesper device revoke <ID>      撤销一台设备
-  vesper latch                   显示本地锁状态`;
+  vesper latch                   显示本地锁状态
+  vesper content check           检查 ~/vesper-content（类型、模板、偏好、权限）`;
 
 async function main(argv: string[]): Promise<number> {
   const [cmd, sub, arg] = argv;
@@ -100,6 +102,10 @@ async function main(argv: string[]): Promise<number> {
     case 'latch':
       await cmdLatch(env);
       return 0;
+    case 'content':
+      if (sub === 'check') return (await cmdContentCheck(env, cfg.contentDir)) ? 0 : 1;
+      io.out(HELP);
+      return 2;
     case 'device':
       if (sub === 'list') await cmdDeviceList(env);
       else if (sub === 'approve') return (await cmdDeviceApprove(env, arg)) ? 0 : 1;

@@ -2,16 +2,19 @@
 // Only `init` talks to the network (with the one-time setup token); approvals
 // and revocations are VM-signed and queued for the running worker to deliver.
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { b64urlEncode } from '@vesper/core/encoding';
 import { assertValidPublicJwk } from '@vesper/core/keys';
 import { computeFingerprint, lastGroup } from '@vesper/core/fingerprint';
 import { approvalSigningString, revocationSigningString, signString } from '@vesper/core/sign';
 import { formatLocal } from '@vesper/core/time';
+import { isKnownTicketType, TICKET_TYPES } from '@vesper/core/ticket-types';
 import { HttpError, NetworkError, registerVm, type PendingDevice } from './api.ts';
 import { generateVmKeys, keysExist, loadVmKeys } from './keystore.ts';
 import { readJson, writeFileAtomic } from './fsutil.ts';
+import { ContentError, loadPreferences, loadTicketTypes, loadType } from './content.ts';
 import { readLatch } from './latch.ts';
 import { enqueueDeviceAction, listDeviceActions } from './outbox.ts';
 import { loadRevoked, loadTrusted, trustDevice, untrustDevice } from './trust.ts';
@@ -91,8 +94,8 @@ export async function cmdInit(env: CliEnv): Promise<void> {
   io.out('下一步（用有 sudo 权限的账号执行）：');
   io.out(`  1. sudo install -D -o root -g root -m 0600 ${p.pendingWorkerToken} /etc/vesper/worker-token`);
   io.out(`  2. sudo shred -u ${p.pendingWorkerToken}`);
-  io.out('  3. sudo systemctl enable --now vesper-worker');
-  io.out('  4. 在手机上打开 PWA，进行首次设置。');
+  io.out('  3. 安装并启动 systemd 服务（vm-setup/08-worker-service.md）。');
+  io.out('  4. 在手机上打开 PWA，进行首次设置（vm-setup/09-first-run.md）。');
 }
 
 export async function cmdFingerprint(env: CliEnv): Promise<void> {
@@ -225,4 +228,77 @@ export async function cmdLatch(env: CliEnv): Promise<void> {
   env.io.out(`本地锁：已上锁（${latch.reason}${latch.detail ? `: ${latch.detail}` : ''}，${formatLocal(latch.since)}）`);
   env.io.out('v1 没有解锁指令（v2 会提供 vesper unlock：需要 break-glass key，并由 VM 签名）。');
   env.io.out('在 v1 测试期间如需解除，请看 vm-setup/README.md 的「v1 手动恢复」。');
+}
+
+const CONTENT_ERROR_LABEL: Record<string, string> = {
+  content_missing: '找不到档案',
+  content_too_large: '档案超过 64 KiB',
+  bad_template_path: '模板路径不合法（必须是相对路径，而且不能跳出内容目录）',
+  bad_ticket_types: 'ticket-types.json 格式不正确',
+  unknown_type: 'ticket-types.json 里没有这个类型',
+};
+
+function contentError(e: unknown): string {
+  if (e instanceof ContentError) return `${CONTENT_ERROR_LABEL[e.code] ?? e.code}（${e.message}）`;
+  return '无法读取';
+}
+
+/** Files other users could modify would let them inject instructions into every prompt. */
+function writableByOthers(dir: string): string[] {
+  const out: string[] = [];
+  const walk = (p: string) => {
+    const st = statSync(p);
+    if (st.mode & 0o022) out.push(p);
+    if (st.isDirectory()) for (const name of readdirSync(p)) if (name !== '.git') walk(join(p, name));
+  };
+  walk(dir);
+  return out;
+}
+
+/** `vesper content check`: validates ~/vesper-content against the ticket types Vercel knows. */
+export async function cmdContentCheck(env: CliEnv, contentDir: string): Promise<boolean> {
+  const { io } = env;
+  if (!existsSync(contentDir)) {
+    io.out(`✗ 找不到内容目录 ${contentDir}`);
+    return false;
+  }
+  let ok = true;
+  let types: ReturnType<typeof loadTicketTypes>;
+  try {
+    types = loadTicketTypes(contentDir);
+  } catch (e) {
+    io.out(`✗ ticket-types.json：${contentError(e)}`);
+    return false;
+  }
+  try {
+    io.out(`✓ preferences.md（${loadPreferences(contentDir).length} 个字符）`);
+  } catch (e) {
+    ok = false;
+    io.out(`✗ preferences.md：${contentError(e)}`);
+  }
+  for (const t of TICKET_TYPES) {
+    if (!types[t.key]) {
+      ok = false;
+      io.out(`✗ ${t.key}（${t.label}）：ticket-types.json 里没有这个类型，这类 ticket 都会失败`);
+      continue;
+    }
+    try {
+      const l = loadType(contentDir, t.key);
+      io.out(`✓ ${t.key}（${t.label}）：模型 ${l.config.model}，模板 ${l.config.template}，上限 ${l.config.max_output_chars} 字符`);
+    } catch (e) {
+      ok = false;
+      io.out(`✗ ${t.key}（${t.label}）：${contentError(e)}`);
+    }
+  }
+  for (const key of Object.keys(types)) {
+    if (!isKnownTicketType(key)) io.out(`! ${key}：Vercel 上没有这个类型，永远不会被用到`);
+  }
+  const loose = writableByOthers(contentDir);
+  if (loose.length) {
+    ok = false;
+    io.out(`✗ 这些档案或目录其他用户也能写入（可以借此改写你的 prompt）：${loose.join('、')}`);
+    io.out(`  修正：chmod -R go-w ${contentDir}`);
+  }
+  io.out(ok ? '内容检查通过。' : '内容有问题，请修正后再执行一次 vesper content check。');
+  return ok;
 }

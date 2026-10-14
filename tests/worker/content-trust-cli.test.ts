@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, mkdirSync, symlinkSync, statSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, mkdirSync, symlinkSync, statSync, readFileSync, existsSync, chmodSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { lastGroup } from '@vesper/core/fingerprint';
@@ -9,7 +9,7 @@ import { loadTrusted, saveTrusted, trustDevice, untrustDevice, loadRevoked } fro
 import { latchExists, readLatch, writeLatch } from '../../worker/src/latch.ts';
 import { paths } from '../../worker/src/paths.ts';
 import { generateVmKeys } from '../../worker/src/keystore.ts';
-import { cmdDeviceApprove, cmdInit, cmdStatus } from '../../worker/src/cli-commands.ts';
+import { cmdContentCheck, cmdDeviceApprove, cmdInit, cmdStatus } from '../../worker/src/cli-commands.ts';
 import { runLoop, deliverDeviceActions } from '../../worker/src/loop.ts';
 import { HttpError, NetworkError } from '../../worker/src/api.ts';
 import { enqueueDeviceAction, listDeviceActions } from '../../worker/src/outbox.ts';
@@ -208,4 +208,37 @@ test('VM key files: refuse to overwrite an existing identity', async () => {
   const p = paths(tmp('vesper-data-'));
   await generateVmKeys(p);
   await assert.rejects(generateVmKeys(p), /refusing to overwrite/);
+});
+
+test('vesper content check: passes for a complete content dir, explains every problem otherwise', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'vesper-content-check-'));
+  writeContent(dir);
+  chmodSync(dir, 0o700);
+  const run = async () => {
+    const out: string[] = [];
+    const env = { io: { out: (l = '') => out.push(l), ask: async () => '' }, paths: paths(join(dir, 'data')), baseUrl: '', now: Date.now };
+    return { ok: await cmdContentCheck(env, dir), text: out.join('\n') };
+  };
+  let r = await run();
+  assert.equal(r.ok, true, r.text);
+  assert.match(r.text, /✓ general（一般）：模型 claude-haiku-5-5/);
+  assert.match(r.text, /内容检查通过/);
+
+  // a missing template, an unknown extra type and a group-writable file are all reported
+  rmSync(join(dir, 'templates', 'coding.md'));
+  const types = JSON.parse(readFileSync(join(dir, 'ticket-types.json'), 'utf8'));
+  types.poetry = { model: 'claude-haiku-5-5', template: 'templates/general.md', max_output_chars: 1000 };
+  writeFileSync(join(dir, 'ticket-types.json'), JSON.stringify(types));
+  chmodSync(join(dir, 'preferences.md'), 0o664);
+  r = await run();
+  assert.equal(r.ok, false);
+  assert.match(r.text, /✗ coding（程序开发）：找不到档案/);
+  assert.match(r.text, /! poetry：Vercel 上没有这个类型/);
+  assert.match(r.text, /其他用户也能写入.*preferences\.md/);
+
+  // broken JSON stops early with a clear message
+  writeFileSync(join(dir, 'ticket-types.json'), '{oops');
+  r = await run();
+  assert.equal(r.ok, false);
+  assert.match(r.text, /✗ ticket-types\.json：ticket-types\.json 格式不正确/);
 });
