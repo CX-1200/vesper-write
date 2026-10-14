@@ -1,0 +1,122 @@
+{
+  "_warning": "TEST-ONLY keys. Never use these keys for anything real.",
+  "device": {
+    "sign_private_jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "3jihB7foXkkaltcbQ-6DUgs7sybZ0rz9lqooslurYRQ",
+      "y": "cJmW3Ltuz4GqkbJG3JLOmQoMRRiErxLrYohhfTeea7Y",
+      "d": "1CFAjbPGNKCPvouF20V2DPjI6--i_sBlUEvhGzExyGo"
+    },
+    "sign_public_jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "3jihB7foXkkaltcbQ-6DUgs7sybZ0rz9lqooslurYRQ",
+      "y": "cJmW3Ltuz4GqkbJG3JLOmQoMRRiErxLrYohhfTeea7Y"
+    },
+    "enc_private_jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "GkTuCmSZdEgO_YF6VEnHJRMTNUWNeVZb2u8y8dr9Ci8",
+      "y": "1rK9rzaq--3tMPaUvOY2pT7JmgyDNJVKM0wNsRNQ-Sg",
+      "d": "fxxaqZRlq7uhcaiz1okbO7wZOq9SC6kNrTOMF7IUucg"
+    },
+    "enc_public_jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "GkTuCmSZdEgO_YF6VEnHJRMTNUWNeVZb2u8y8dr9Ci8",
+      "y": "1rK9rzaq--3tMPaUvOY2pT7JmgyDNJVKM0wNsRNQ-Sg"
+    }
+  },
+  "vm": {
+    "sign_private_jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "1F1ud2FTa9bytpKW2WBkAoo2wouZTkI6TFE6lsY1pRY",
+      "y": "hWDxzCtS-7mPX5fPefoqqPDH5AW4f-H7CrbDaGvK_HY",
+      "d": "A9abCkX13amMUU8-g8nC4d3V-cbxJ65o4RhZI1k8ISA"
+    },
+    "sign_public_jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "1F1ud2FTa9bytpKW2WBkAoo2wouZTkI6TFE6lsY1pRY",
+      "y": "hWDxzCtS-7mPX5fPefoqqPDH5AW4f-H7CrbDaGvK_HY"
+    },
+    "enc_private_jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "1PaiUPBk_NolCCSTNooxZMH3cDsjR9VXmHzEVlT3Pks",
+      "y": "L71TWk-OD5zwDUum7de5kBMoHHzvdNFwzlEqhMxhnHE",
+      "d": "-3AvprXoYWfSnVQ9FqlmFt0lgGifUYTyEYWMC_0lKqw"
+    },
+    "enc_public_jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "1PaiUPBk_NolCCSTNooxZMH3cDsjR9VXmHzEVlT3Pks",
+      "y": "L71TWk-OD5zwDUum7de5kBMoHHzvdNFwzlEqhMxhnHE"
+    }
+  },
+  "expected": {
+    "device_sign_spki_hex": "3059301306072a8648ce3d020106082a8648ce3d03010703420004de38a107b7e85e491a96d71b43ee83520b3bb326d9d2bcfd96aa28b25bab6114709996dcbb6ecf81aa91b246dc92ce990a0c451884af12eb6288617d379e6bb6",
+    "device_enc_spki_hex": "3059301306072a8648ce3d020106082a8648ce3d030107034200041a44ee0a649974480efd817a5449c725131335458d79565bdaef32f1dafd0a2fd6b2bdaf36aafbeded30f694bce636a53ec99a0c8334954a334c0db11350f928",
+    "device_fingerprint": "58196 32499 71945 16415 29964 28485",
+    "vm_fingerprint": "05895 10318 37951 94568 69557 40375",
+    "input_aad": "vesper/in/v1|6f1c2a4e-3b5d-4c7e-8f90-a1b2c3d4e5f6|general|claude_code|0b7e1d2c-9a8f-4e6d-8c5b-4a3f2e1d0c9b|1760400000000",
+    "output_aad": "vesper/out/v1|6f1c2a4e-3b5d-4c7e-8f90-a1b2c3d4e5f6|general|claude_code|0b7e1d2c-9a8f-4e6d-8c5b-4a3f2e1d0c9b|1760400123456"
+  },
+  "ticket": {
+    "id": "6f1c2a4e-3b5d-4c7e-8f90-a1b2c3d4e5f6",
+    "type": "general",
+    "target": "claude_code",
+    "device_id": "0b7e1d2c-9a8f-4e6d-8c5b-4a3f2e1d0c9b",
+    "ts": 1760400000000
+  },
+  "input": {
+    "plaintext": {
+      "raw_input": "帮我整理今天会议的重点，输出成清单"
+    },
+    "envelope": {
+      "v": 1,
+      "alg": "HPKE-Base-P256-SHA256-A256GCM",
+      "enc": "BEQT-aw7-FVEXdaFhP9JFPDdx-30GyVpI5xo1l9j5w2ki-BzFWx4NRFq71dtKlZQ-IXrDn2fwrRekecqC68xlcQ",
+      "ct": "a4n5QyEc6dfReq6-23A8Cysf2HB67qqKejYX7xVrZoG5hfpxzqrWEQFYD3-ybLJ-Y5L0LpN07JNo6PRTcE7aQDvX6UvM_nmbvmp5PJADQ9URU0Q"
+    },
+    "body": "{\"device_id\":\"0b7e1d2c-9a8f-4e6d-8c5b-4a3f2e1d0c9b\",\"id\":\"6f1c2a4e-3b5d-4c7e-8f90-a1b2c3d4e5f6\",\"input_envelope\":{\"alg\":\"HPKE-Base-P256-SHA256-A256GCM\",\"ct\":\"a4n5QyEc6dfReq6-23A8Cysf2HB67qqKejYX7xVrZoG5hfpxzqrWEQFYD3-ybLJ-Y5L0LpN07JNo6PRTcE7aQDvX6UvM_nmbvmp5PJADQ9URU0Q\",\"enc\":\"BEQT-aw7-FVEXdaFhP9JFPDdx-30GyVpI5xo1l9j5w2ki-BzFWx4NRFq71dtKlZQ-IXrDn2fwrRekecqC68xlcQ\",\"v\":1},\"target\":\"claude_code\",\"ts\":1760400000000,\"type\":\"general\"}",
+    "nonce": "AAECAwQFBgcICQoLDA0ODw",
+    "request_signing_string": "vesper/req/v1|POST|/api/tickets|1760400000000|AAECAwQFBgcICQoLDA0ODw|e2c3197850ecf4d721a48dea954aa4fbe3b047638f3d305e887d50b909fe00bb",
+    "request_signature": "7RDlOHTkwsuRAq6DFmacuxsWFUa2z0d22dsHYCRLJhuWgGwR56J9fbZII5eiPKuzQa4zKLN8kdejOLz5q5PDew"
+  },
+  "output": {
+    "processed_at": 1760400123456,
+    "plaintext": {
+      "prompt": "请把以下会议重点整理成清单……",
+      "lint": [],
+      "model": "claude-haiku-5-5",
+      "raw_input": "帮我整理今天会议的重点，输出成清单",
+      "truncated": false,
+      "limits": {
+        "max_chars": 6000,
+        "typical_chars": 2500
+      }
+    },
+    "envelopes": {
+      "0b7e1d2c-9a8f-4e6d-8c5b-4a3f2e1d0c9b": {
+        "v": 1,
+        "alg": "HPKE-Base-P256-SHA256-A256GCM",
+        "enc": "BMEveQsYSr_x9aCUF_Lbp8uRQ4JJkLr14bcyZp1hGHGytNfd6Boz_E-VBnzGF6Y3b-G4uAZOPmV5xyGsP2_3uyc",
+        "ct": "hE0sa25Lj-fBnmpwKevMBxLsgExFRqgju1UsfDhoYR5d6MlNSThMzmyGb6j2a6ebSTIr-p7jTVF9d-T5XOuvIrOcKkWg2JKqH7-jQrg-A06olzC4_XcV_gW-RttrI2uBBd3lnvvL82d5fuA2uVPzmxJDQvO05Qm1JANQVyeBWrZBstQeEESpELvGH205HhMH-GaiZ1-azO2N5jDSL8UQmqd1HD7oSgTpcQpmOsRcyIMNkHoPGBln14bjxj1lExr8_2HhBMPQoEWuW7uWoRfYAwVlyvvtyEa-9r-4TF5dYYPKxADuXCRamxNOKpOiL0BlCRmsXw"
+      }
+    },
+    "signing_string": "vesper/outsig/v1|6f1c2a4e-3b5d-4c7e-8f90-a1b2c3d4e5f6|628b4ef95db59197a6d77a3d5767e50a8f18a90ba06b29c3a782f52973923dde",
+    "signature": "WUZ7WN3l-F6t0mBO1rBBZglgTp11EcZcPXyDAMGooXziOSRl6PXucPCAevgQlGfYytLqE628xMXToT_ghMlEEQ"
+  },
+  "approval": {
+    "record": {
+      "deviceId": "0b7e1d2c-9a8f-4e6d-8c5b-4a3f2e1d0c9b",
+      "fingerprint": "58196 32499 71945 16415 29964 28485",
+      "approvedAt": 1760400200000
+    },
+    "signing_string": "vesper/approve/v1|0b7e1d2c-9a8f-4e6d-8c5b-4a3f2e1d0c9b|58196 32499 71945 16415 29964 28485|1760400200000",
+    "signature": "tSxl3FVhOsRj1hIUhnw8qU3zOqE6eb3OC_C2PWwoaDrr12lwOY1UVy-lSPxmUfmvZ43bBeBix4bcFucT39PBgQ"
+  }
+}

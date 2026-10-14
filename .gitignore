@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+
+# env files: never commit secrets (§18)
+.env
+.env.*
+!.env.example
+
+# Next.js
+web/.next/
+web/out/
+web/next-env.d.ts
+*.tsbuildinfo
+
+# local dev databases and test artifacts
+*.sqlite
+*.sqlite-journal
+*.db
+.data/
+tests/.tmp/
+playwright-report/
+test-results/
+
+# OS / editor
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# never commit keys or tokens (§18)
+*.pem
+*.key
+*.jwk
+worker-token*
+claude-oauth-token*

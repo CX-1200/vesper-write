@@ -1,0 +1,26 @@
+{
+  "name": "vesper",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "web",
+    "worker"
+  ],
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 \"tests/**/*.test.ts\"",
+    "test:core": "node --test \"tests/core/*.test.ts\"",
+    "test:worker": "node --test \"tests/worker/*.test.ts\"",
+    "test:web": "node --test --test-concurrency=1 \"tests/web/*.test.ts\"",
+    "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/*.test.ts\"",
+    "typecheck": "tsc -p packages/core && tsc -p worker && tsc -p web --noEmit",
+    "build:web": "npm run build -w web"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.0",
+    "typescript": "6.0.3"
+  }
+}

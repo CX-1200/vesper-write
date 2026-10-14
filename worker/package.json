@@ -1,0 +1,13 @@
+{
+  "name": "@vesper/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Vesper VM worker: pulls encrypted tickets, runs claude -p with no tools, writes encrypted prompts back.",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "dependencies": {
+    "@vesper/core": "0.1.0"
+  }
+}

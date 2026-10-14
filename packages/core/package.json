@@ -1,0 +1,14 @@
+{
+  "name": "@vesper/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared code for web and worker: schemas, crypto envelopes, signatures, fingerprints, lint, state machines.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "hpke": "1.1.7"
+  }
+}
