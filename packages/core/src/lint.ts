@@ -23,7 +23,8 @@ export interface LintHit {
 export interface LintOptions {
   /** set by the VM when the model output was cut at the type's length limit */
   truncated?: boolean;
-  limits?: { max_chars?: number; typical_chars?: number };
+  /** the type's limits as carried in the output plaintext (null = no typical length configured) */
+  limits?: { max_chars?: number | null; typical_chars?: number | null };
 }
 
 export const LINT_RULES: Record<LintRuleId, { severity: Severity; title: string }> = {

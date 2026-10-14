@@ -11,7 +11,7 @@
     "node": ">=22.18"
   },
   "scripts": {
-    "test": "node --test --test-concurrency=1 \"tests/**/*.test.ts\"",
+    "test": "node --test --test-concurrency=1 \"tests/{core,web,worker}/*.test.ts\"",
     "test:core": "node --test \"tests/core/*.test.ts\"",
     "test:worker": "node --test \"tests/worker/*.test.ts\"",
     "test:web": "node --test --test-concurrency=1 \"tests/web/*.test.ts\"",

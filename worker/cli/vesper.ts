@@ -73,7 +73,7 @@ const io: CliIo = {
 const HELP = `用法：
   vesper init                    产生 VM 密钥并向 Vercel 登记（只做一次）
   vesper fingerprint             显示 VM 指纹
-  vesper status                  显示本地锁、连线与设备概况
+  vesper status                  显示本地锁、连接与设备概况
   vesper device list             列出可信、已撤销与待批准的设备
   vesper device approve [ID]     比对指纹后批准一台设备
   vesper device revoke <ID>      撤销一台设备

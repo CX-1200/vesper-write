@@ -23,7 +23,8 @@ export function proxy(request: NextRequest) {
     "base-uri 'none'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    ...(isDev ? [] : ['upgrade-insecure-requests']),
+    // Only over https (Vercel); a local `next start` on http://localhost would otherwise break.
+    ...(!isDev && request.nextUrl.protocol === 'https:' ? ['upgrade-insecure-requests'] : []),
   ].join('; ');
 
   const requestHeaders = new Headers(request.headers);

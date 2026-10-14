@@ -9,13 +9,15 @@ import type { Db } from './db/types.ts';
 
 let cached: AppContext | null = null;
 
+/** Local development only (`next dev` / `next start` run from web/); production uses D1. */
 async function localSqlite(path: string): Promise<Db> {
   const { SqliteDb } = await import('./db/sqlite.ts');
+  const { DatabaseSync } = await import('node:sqlite');
   const { mkdirSync } = await import('node:fs');
-  const { dirname } = await import('node:path');
+  const { dirname, join } = await import('node:path');
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
-  const db = new SqliteDb(path);
-  db.applySchema(new URL('./db/schema.sql', import.meta.url));
+  const db = new SqliteDb(path, DatabaseSync as unknown as import('./db/sqlite.ts').DatabaseSyncCtor);
+  db.applySchema(join(process.cwd(), 'lib', 'db', 'schema.sql'));
   return db;
 }
 

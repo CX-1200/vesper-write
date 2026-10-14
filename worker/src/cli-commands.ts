@@ -60,7 +60,7 @@ export async function cmdInit(env: CliEnv): Promise<void> {
   }
 
   const setupToken = (await io.ask('请输入你在 Vercel 设定的 SETUP_TOKEN（输入时不会显示）：', { hidden: true })).trim();
-  if (setupToken.length < 32) throw new CliError('SETUP_TOKEN 太短（至少 32 个字元）。');
+  if (setupToken.length < 32) throw new CliError('SETUP_TOKEN 太短（至少 32 个字符）。');
 
   let res: { fingerprint: string };
   try {
@@ -88,7 +88,7 @@ export async function cmdInit(env: CliEnv): Promise<void> {
   io.out('登记成功。这是 VM 的指纹，稍后要和设备屏幕上显示的「VM 指纹」逐位比对：');
   showFingerprint(io, 'VM 指纹', keys.fingerprint);
   io.out('');
-  io.out('下一步（用有 sudo 权限的帐号执行）：');
+  io.out('下一步（用有 sudo 权限的账号执行）：');
   io.out(`  1. sudo install -D -o root -g root -m 0600 ${p.pendingWorkerToken} /etc/vesper/worker-token`);
   io.out(`  2. sudo shred -u ${p.pendingWorkerToken}`);
   io.out('  3. sudo systemctl enable --now vesper-worker');
@@ -107,7 +107,7 @@ export async function cmdStatus(env: CliEnv): Promise<void> {
   const latch = readLatch(p);
   io.out(latch ? `本地锁：已上锁（${latch.reason}${latch.detail ? `: ${latch.detail}` : ''}，${formatLocal(latch.since)}）` : '本地锁：无');
   const status = readJson<{ state?: string; updated_at?: number; last_pull_ok?: number }>(p.status);
-  io.out(status?.last_pull_ok ? `最后一次成功连线：${formatLocal(status.last_pull_ok)}（系统状态 ${status.state ?? '?'}）` : '最后一次成功连线：尚无纪录');
+  io.out(status?.last_pull_ok ? `最后一次成功连接：${formatLocal(status.last_pull_ok)}（系统状态 ${status.state ?? '?'}）` : '最后一次成功连接：尚无纪录');
   io.out(`可信设备：${(await loadTrusted(p)).length} 台；已撤销：${loadRevoked(p).length} 台`);
   const pending = readJson<{ devices: PendingDevice[] }>(p.pendingDevices)?.devices ?? [];
   io.out(`待批准设备：${pending.length} 台`);

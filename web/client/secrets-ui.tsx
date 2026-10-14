@@ -1,0 +1,101 @@
+'use client';
+
+// Shows newly generated user secrets exactly once and makes the user prove
+// they saved them (last group of each) before the hashes are sent.
+
+import { useState, type FormEvent, type ReactNode } from 'react';
+import { generateUserSecret } from './secrets.ts';
+
+export type SecretKind = 'recovery_key' | 'break_glass_key' | 'kill_token';
+
+const INFO: Record<SecretKind, { title: string; text: string }> = {
+  recovery_key: {
+    title: 'Recovery key',
+    text: '登记新设备时使用。只能用一次，用过之后要立刻换新。存进密码管理器，或抄在纸上。',
+  },
+  break_glass_key: {
+    title: 'Break-glass key',
+    text: '系统被封锁后，在 VM 终端解锁时使用（v2 的 vesper unlock）。离线保存（例如纸本），不要存在这台设备上。',
+  },
+  kill_token: {
+    title: 'Kill token',
+    text: '紧急时在任何浏览器打开 /kill 输入它，会立刻封锁整个系统。它只能封锁，不能做其他事。存在紧急时拿得到的地方。',
+  },
+};
+
+function lastGroup(secret: string): string {
+  return secret.split('-').pop() ?? '';
+}
+
+export function NewSecrets({
+  kinds,
+  submitLabel,
+  extra,
+  onSubmit,
+}: {
+  kinds: SecretKind[];
+  submitLabel: string;
+  /** extra form fields rendered above the submit button (e.g. a TOTP code input) */
+  extra?: ReactNode;
+  onSubmit: (values: Partial<Record<SecretKind, string>>) => Promise<string | null>;
+}) {
+  const [values] = useState(() => Object.fromEntries(kinds.map((k) => [k, generateUserSecret()])) as Partial<Record<SecretKind, string>>);
+  const [typed, setTyped] = useState<Partial<Record<SecretKind, string>>>({});
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const allTyped = kinds.every((k) => (typed[k] ?? '').trim().toUpperCase() === lastGroup(values[k]!));
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (!allTyped || !saved) return;
+    setBusy(true);
+    setError('');
+    const err = await onSubmit(values);
+    setBusy(false);
+    if (err) setError(err);
+  }
+
+  return (
+    <form onSubmit={submit}>
+      <p>下面的内容只会显示这一次。服务器只保存它们的哈希，无法帮你找回。</p>
+      {kinds.map((k) => (
+        <div key={k}>
+          <h3>{INFO[k].title}</h3>
+          <p className="small muted">{INFO[k].text}</p>
+          <div className="secret-box">{values[k]}</div>
+        </div>
+      ))}
+      <fieldset>
+        <legend>确认已存好</legend>
+        {kinds.map((k) => (
+          <div key={k}>
+            <label htmlFor={`confirm-${k}`}>{INFO[k].title} 的最后 4 个字符</label>
+            <input
+              id={`confirm-${k}`}
+              className="code"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              maxLength={4}
+              value={typed[k] ?? ''}
+              onChange={(e) => setTyped({ ...typed, [k]: e.target.value })}
+            />
+          </div>
+        ))}
+        <label className="inline">
+          <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
+          <span>我已经把上面每一组都存好了</span>
+        </label>
+      </fieldset>
+      {extra}
+      {error ? <p className="error">{error}</p> : null}
+      <div className="actions">
+        <button type="submit" disabled={!allTyped || !saved || busy}>
+          {busy ? '处理中…' : submitLabel}
+        </button>
+      </div>
+    </form>
+  );
+}

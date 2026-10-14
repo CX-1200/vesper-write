@@ -18,6 +18,12 @@ import { makeHarness, SETUP_TOKEN } from '../helpers/harness.ts';
 import { SimVm, writeContent } from '../helpers/sim-vm.ts';
 import { SimDevice } from '../helpers/sim-device.ts';
 import { beginSetup } from '../helpers/scenario.ts';
+import * as nodeCrypto from 'node:crypto';
+
+// These tests run the web handlers in-process (makeHarness), which hash
+// secrets with crypto.argon2 (Node ≥ 24.7). The worker code itself only needs
+// Node 22, so on the VM these few tests are skipped instead of failing.
+const WEB_HARNESS = 'argon2' in nodeCrypto ? {} : { skip: 'needs Node ≥ 24.7 (the web harness uses crypto.argon2)' };
 
 function tmp(prefix: string) {
   return mkdtempSync(join(tmpdir(), prefix));
@@ -63,7 +69,7 @@ test('content: oversized files are refused', () => {
   assert.throws(() => loadPreferences(dir), (e: any) => e.code === 'content_too_large');
 });
 
-test('trust list: fingerprints are recomputed on load, so a hand-edited key is rejected', async () => {
+test('trust list: fingerprints are recomputed on load, so a hand-edited key is rejected', WEB_HARNESS, async () => {
   const p = paths(tmp('vesper-data-'));
   const h = makeHarness();
   const a = await SimDevice.create(h, 'A');
@@ -99,7 +105,7 @@ test('claude home: settings are written and directories are private', () => {
   assert.equal(statSync(p.claudeCwd).mode & 0o777, 0o700);
 });
 
-test('vesper init: generates keys, registers with the setup token, prints the fingerprint; refuses to run twice', async () => {
+test('vesper init: generates keys, registers with the setup token, prints the fingerprint; refuses to run twice', WEB_HARNESS, async () => {
   const h = makeHarness();
   const vm = new SimVm(h);
   const { env, output } = vm.cli([SETUP_TOKEN]);
@@ -119,7 +125,7 @@ test('vesper init: generates keys, registers with the setup token, prints the fi
   vm.cleanup();
 });
 
-test('vesper init: a wrong setup token fails without printing anything secret', async () => {
+test('vesper init: a wrong setup token fails without printing anything secret', WEB_HARNESS, async () => {
   const h = makeHarness();
   const vm = new SimVm(h);
   const { env, output } = vm.cli(['wrong-token-wrong-token-wrong-token-1234']);
@@ -128,7 +134,7 @@ test('vesper init: a wrong setup token fails without printing anything secret', 
   vm.cleanup();
 });
 
-test('vesper device approve: nothing pending → explains; the fingerprint is recomputed locally', async () => {
+test('vesper device approve: nothing pending → explains; the fingerprint is recomputed locally', WEB_HARNESS, async () => {
   const h = makeHarness();
   const vm = await SimVm.create(h);
   const { env, output } = vm.cli([]);
@@ -147,7 +153,7 @@ test('vesper device approve: nothing pending → explains; the fingerprint is re
   vm.cleanup();
 });
 
-test('vesper status runs and reports the latch', async () => {
+test('vesper status runs and reports the latch', WEB_HARNESS, async () => {
   const h = makeHarness();
   const vm = await SimVm.create(h);
   writeLatch(vm.p, 'r8', h.clock.t, 'decrypt_failed');

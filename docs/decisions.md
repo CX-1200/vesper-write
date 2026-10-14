@@ -63,7 +63,7 @@
 
 | 决定 | 理由 |
 |---|---|
-| `vesper device approve` / `revoke` 只改本地的 `trusted-devices.json`，并把一份**由 VM 签名**的批准或撤销记录放进本地 outbox；正在运行的 worker 下一次拉取时把它送到 `/api/worker/device-approval` | 这样 CLI 完全不需要碰网络和 worker token；所有对外连线都只来自 systemd 沙箱里的 worker。信任根仍然是 VM 本地的 `trusted-devices.json`。 |
+| `vesper device approve` / `revoke` 只改本地的 `trusted-devices.json`，并把一份**由 VM 签名**的批准或撤销记录放进本地 outbox；正在运行的 worker 下一次拉取时把它送到 `/api/worker/device-approval` | 这样 CLI 完全不需要碰网络和 worker token；所有对外连接都只来自 systemd 沙箱里的 worker。信任根仍然是 VM 本地的 `trusted-devices.json`。 |
 | 待批准设备的清单由 worker 从 `/api/worker/pull` 取得并缓存在本地；**指纹一律由 VM 自己从公钥重新计算**，不采用 Vercel 给的指纹 | Vercel 不可信；只有你在两个屏幕上肉眼比对的指纹才算数。 |
 | 批准时，CLI 要求你输入「设备屏幕上指纹的最后一组 5 位数字」，再输入 `yes` | 逼你真的去看设备屏幕，而不是直接按 Enter。 |
 

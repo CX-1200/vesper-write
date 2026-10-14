@@ -18,12 +18,18 @@ interface SqliteDatabase {
   close(): void;
 }
 
+export type DatabaseSyncCtor = new (path: string) => SqliteDatabase;
+
 export class SqliteDb implements Db {
   readonly #db: SqliteDatabase;
 
-  constructor(path = ':memory:') {
-    // Loaded lazily so production bundles never touch node:sqlite.
-    const { DatabaseSync } = require('node:sqlite') as { DatabaseSync: new (p: string) => SqliteDatabase };
+  /**
+   * `impl` is node:sqlite's DatabaseSync. Inside the Next.js bundle it must be
+   * passed in (loaded with `await import('node:sqlite')`), because the bundler
+   * cannot resolve createRequire(); tests and scripts can omit it.
+   */
+  constructor(path = ':memory:', impl?: DatabaseSyncCtor) {
+    const DatabaseSync = impl ?? (require('node:sqlite') as { DatabaseSync: DatabaseSyncCtor }).DatabaseSync;
     this.#db = new DatabaseSync(path);
     this.#db.exec('PRAGMA foreign_keys = ON;');
   }
