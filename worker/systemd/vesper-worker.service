@@ -1,0 +1,65 @@
+# /etc/systemd/system/vesper-worker.service
+# Vesper worker. Every sandbox line is explained in vm-setup/06-worker-service.md.
+# Check the hardening score with: systemd-analyze security vesper-worker
+
+[Unit]
+Description=Vesper worker (encrypted prompt secretary)
+Wants=network-online.target
+After=network-online.target squid.service
+
+[Service]
+Type=simple
+User=vesper
+Group=vesper
+WorkingDirectory=/home/vesper/.local/share/vesper
+ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning /opt/vesper/worker/src/main.ts
+
+Environment=NODE_ENV=production
+Environment=VESPER_CONFIG=/etc/vesper/worker.json
+# Node's built-in fetch only uses HTTPS_PROXY when this is set.
+Environment=NODE_USE_ENV_PROXY=1
+Environment=HTTPS_PROXY=http://127.0.0.1:3128
+Environment=HTTP_PROXY=http://127.0.0.1:3128
+
+# Secrets (§16.3): read by PID 1 (root) and exposed only to this service
+# under $CREDENTIALS_DIRECTORY. The files in /etc/vesper stay root-only.
+LoadCredential=worker-token:/etc/vesper/worker-token
+LoadCredential=claude-oauth-token:/etc/vesper/claude-oauth-token
+
+# --- sandbox -------------------------------------------------------------
+UMask=0077
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/vesper/.local/share/vesper
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+RemoveIPC=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallErrorNumber=EPERM
+# Network: only loopback (the local proxy). The proxy decides which domains are reachable.
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -213,7 +213,7 @@ export async function handlePasskeyVerify(req: Request, ctx: AppContext): Promis
           expectedChallenge: challenge,
           expectedOrigin: ctx.env.appOrigin,
           expectedRPID: ctx.env.rpId,
-          credential: { id: device.webauthn_credential_id, publicKey: b64urlDecode(device.webauthn_public_key), counter: device.sign_count },
+          credential: { id: device.webauthn_credential_id, publicKey: new Uint8Array(b64urlDecode(device.webauthn_public_key)), counter: device.sign_count },
           requireUserVerification: true,
         });
         ok = v.verified;

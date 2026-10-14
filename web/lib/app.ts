@@ -57,7 +57,7 @@ export async function getAppContext(): Promise<AppContext> {
   return cached;
 }
 
-type Handler = (req: Request, ctx: AppContext, params: Record<string, string>) => Promise<Response>;
+type Handler = (req: Request, ctx: AppContext, params: { id: string }) => Promise<Response>;
 
 /** Wrap a handler for app/api route files. Unexpected errors become a generic 500 with no details. */
 export function route(handler: Handler) {
@@ -65,7 +65,7 @@ export function route(handler: Handler) {
     try {
       const ctx = await getAppContext();
       const params = info?.params ? await info.params : {};
-      return await handler(req, ctx, params);
+      return await handler(req, ctx, { id: params.id ?? '' });
     } catch (e) {
       // Log only the error class: messages could echo SQL or upstream errors (§18: no bodies, content or secrets in logs).
       console.error(`[vesper] ${new URL(req.url).pathname} failed: ${(e as Error)?.name ?? 'Error'}`);

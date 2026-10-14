@@ -1,0 +1,11 @@
+{
+  "baseUrl": "https://YOUR-PROJECT.vercel.app",
+  "dataDir": "/home/vesper/.local/share/vesper",
+  "contentDir": "/home/vesper/vesper-content",
+  "claudeBin": "/usr/bin/claude",
+  "proxyUrl": "http://127.0.0.1:3128",
+  "pollIntervalMs": 30000,
+  "claimMax": 2,
+  "claudeTimeoutMs": 120000,
+  "minClaudeVersion": "2.1.293"
+}

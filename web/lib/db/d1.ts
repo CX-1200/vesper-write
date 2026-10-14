@@ -26,14 +26,16 @@ export interface D1Config {
   fetchImpl?: typeof fetch;
 }
 
+type ResolvedD1Config = Required<D1Config>;
+
 export class D1RestDb implements Db {
-  readonly #cfg: Required<Omit<D1Config, 'fetchImpl'>> & { fetchImpl: typeof fetch };
+  readonly #cfg: ResolvedD1Config;
 
   constructor(cfg: D1Config) {
     if (!/^[0-9a-f]{32}$/i.test(cfg.accountId)) throw new DbError('D1 account id looks wrong');
     if (!/^[0-9a-f-]{36}$/i.test(cfg.databaseId)) throw new DbError('D1 database id looks wrong');
     if (!cfg.apiToken) throw new DbError('D1 API token missing');
-    this.#cfg = { mode: 'batch', fetchImpl: globalThis.fetch.bind(globalThis), ...cfg } as typeof this.#cfg;
+    this.#cfg = { mode: 'batch', fetchImpl: globalThis.fetch.bind(globalThis), ...cfg };
   }
 
   get #url(): string {
