@@ -236,3 +236,27 @@ test('§11.3 revocation on the VM: device loses its session and receives no new 
   assert.deepEqual(Object.keys(got.json.ticket.output_envelopes), [phone.id]);
   vm.cleanup();
 });
+
+test('§18: tokens, keys, the password and the TOTP secret are never stored in plaintext; token hashes are argon2id', async () => {
+  const h = makeHarness();
+  const { vm, totpSecret, secrets } = await fullSetup(h);
+  // dump every row of every table
+  const tables = (await h.sql("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")).map((r) => String(r.name));
+  let dump = '';
+  for (const t of tables) for (const row of await h.sql(`SELECT * FROM ${t}`)) dump += JSON.stringify(row) + '\n';
+  const plain: Record<string, string> = { setup_token: SETUP_TOKEN, password: PASSWORD, worker_token: vm.workerToken, totp_secret: totpSecret, ...secrets };
+  for (const [name, value] of Object.entries(plain)) {
+    // user secrets are normalized (no dashes) before hashing, so check that form too
+    assert.ok(!dump.includes(value) && !dump.includes(value.replace(/-/g, '')), `${name} must not appear in the database`);
+  }
+  const hashes = await h.sql('SELECT kind, hash FROM secrets_meta ORDER BY kind');
+  assert.deepEqual(
+    hashes.map((r) => r.kind),
+    ['break_glass', 'kill_token', 'recovery', 'setup', 'worker_token'],
+  );
+  for (const r of hashes) assert.match(String(r.hash), /^\$argon2id\$v=19\$m=\d+,t=\d+,p=\d+\$[A-Za-z0-9+/]+\$[A-Za-z0-9+/]+$/, String(r.kind));
+  const [owner] = await h.sql('SELECT password_hash, totp_secret_enc FROM owner');
+  assert.match(String(owner!.password_hash), /^\$argon2id\$v=19\$m=65536,t=3,p=1\$/);
+  assert.ok(!String(owner!.totp_secret_enc).includes(totpSecret));
+  vm.cleanup();
+});

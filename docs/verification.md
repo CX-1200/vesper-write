@@ -124,13 +124,15 @@
 | 把 CryptoKey 存进 IndexedDB | 规范允许 CryptoKey 结构化复制，但 **CryptoKeyPair 不行**（WebKit bug 164868 维护者明确说明）。iOS 现况：找不到官方的现行确认 | ❓ 我不确定 |
 | Home Screen 上的 web app 会不会被 7 天规则清掉 | WebKit 官方：「The first-party domain of Home Screen web applications is exempt from ITP's 7-day cap on all script-writeable storage」 | ✅ |
 | 其他清除条件 | Safari 17 起每个 origin 的配额依磁盘大小计算，存储模式是 persistent 的 origin 不会被自动清除；`navigator.storage.persist()` 自 iOS 15.2 可用。你从主屏幕删掉 App、或在设定里清除网站资料，资料一定会消失 | ✅ / 🟡（最后一句是一般常识，没找到官方原文） |
+| 主屏幕 App 和 Safari 的存储是否共用 | **不共用**。WebKit bug 181849（2018 年提出，至今仍是 NEW）重现了「Safari 存的值，在主屏幕 App 读到 null，反之亦然」；2022 年一位 WebKit 工程师留言说这是刻意的设计。WebKit 对 7 天上限的说明也写：加到主屏幕的 web app 不属于 Safari，有自己的使用天数计数。另有开发者回报，主屏幕 App 实际上仍遇过 7 天清除（2022 年，iOS 15.3） | 🟡（搜索摘录） |
 
-- 来源：<https://webkit.org/tracking-prevention/>、<https://webkit.org/blog/14445/webkit-features-in-safari-17-0/>、<https://bugs.webkit.org/show_bug.cgi?id=164868>、`@mdn/browser-compat-data` 8.1.5
+- 来源：<https://webkit.org/tracking-prevention/>、<https://webkit.org/blog/14445/webkit-features-in-safari-17-0/>、<https://bugs.webkit.org/show_bug.cgi?id=164868>、<https://bugs.webkit.org/show_bug.cgi?id=181849>（搜索摘录）、`@mdn/browser-compat-data` 8.1.5
 - 对设计的影响：
   1. 每把 CryptoKey 分开存，不存 CryptoKeyPair。
   2. 产生密钥后**立刻自检**：存进 IndexedDB → 重新打开数据库读出 → 签一段测试资料并验证 → 用 HPKE 加解密一次。任何一步失败就停止设置并告诉你。
   3. 设置完成后呼叫 `navigator.storage.persist()`。
   4. 如果密钥真的不见了，按 §11.5 在 VM 撤销旧设备再重新配对。
+  5. iPhone 要**从主屏幕的图示**开始设置（PWA 在 Safari 里开启时会提醒你），因为两边的存储不共用。
 
 ## 9. iOS PWA 的 Web Push 现况
 
@@ -197,9 +199,12 @@
 
 | 事项 | 结论 | 来源 |
 |---|---|---|
-| Node `crypto.argon2()` | Node v24.7.0 加入，支持 argon2id；本地用 RFC 9106 test vector 验证 | <https://nodejs.org/docs/latest-v24.x/api/crypto.html> |
+| Node `crypto.argon2()` | Node v24.7.0 加入，支持 argon2id；用 RFC 9106 §5.3 的 Argon2id test vector 验证（`tests/web/server-crypto.test.ts`） | <https://nodejs.org/docs/latest-v24.x/api/crypto.html> |
 | Node 22 的 TypeScript | Node 22.22 默认开启 type stripping，可以直接执行 `.ts` | 本地实测 |
 | Node 的 proxy 支持 | `NODE_USE_ENV_PROXY=1` 让内建 `fetch` 走 `HTTPS_PROXY`；Node 22.22 已支持 | 本地实测 |
 | Claude Code 的 proxy | 支持 `HTTPS_PROXY`；不支持 SOCKS；`CLAUDE_CODE_PROXY_RESOLVES_HOSTS=1` 让 proxy 负责 DNS 解析 | <https://code.claude.com/docs/en/network-config>、<https://code.claude.com/docs/en/env-vars> |
-| Claude Code 的 apt 仓库 | `downloads.claude.ai/claude-code/apt/stable`，签名密钥指纹 `31DD DE24 DDFA B679 F42D 7BD2 BAA9 29FF 1A7E CACE`；apt 安装不会自动更新 | <https://code.claude.com/docs/en/setup> |
+| Claude Code 的 apt 仓库 | `downloads.claude.ai/claude-code/apt/stable`，签名密钥指纹 `31DD DE24 DDFA B679 F42D 7BD2 BAA9 29FF 1A7E CACE`；apt 安装不会自动更新。vm-setup/06 的指令一字不改地取自官方页面（2026-10-14 再确认一次） | <https://code.claude.com/docs/en/setup> |
+| `claude setup-token` 在 SSH 上怎么用 | 与 `/login` 相同的浏览器授权流程；浏览器若显示一段 code，就贴回终端的 `Paste code here if prompted`（官方文件说明经由 SSH 时常会这样）；token 只印在终端、不会被存起来 | <https://code.claude.com/docs/en/authentication> |
+| Claude Code 的认证优先顺序 | `ANTHROPIC_API_KEY` 的优先权**高于** `CLAUDE_CODE_OAUTH_TOKEN`；worker 给子进程的环境变量是白名单式的，不会有 `ANTHROPIC_API_KEY` | 同上 |
+| Vercel：Root Directory 以外的档案 | 选项名称「Include source files outside of the Root Directory in the Build Step」，2020-08-27 之后建立的专案默认开启 🟡（搜索摘录）。npm workspaces 在 Root Directory 为 `web` 时怎么安装：**我不确定**（README 给了备案设定） | <https://vercel.com/docs/monorepos/monorepo-faq> |
 | 本文件没有拿到 Blueprint | `Vesper_Blueprint_20261013.html` 没有上传到这次对话，所以我没办法检查两份文件有没有冲突 | — |

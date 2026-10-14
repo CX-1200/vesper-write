@@ -32,13 +32,17 @@ function argon2id(message: Uint8Array, salt: Uint8Array, p: Argon2Params, tagLen
   );
 }
 
-const PHC_RE = /^\$argon2id\$v=19\$m=(\d+),t=(\d+),p=(\d+)\$([A-Za-z0-9_-]+)\$([A-Za-z0-9_-]+)$/;
+// PHC string format: salt and hash in standard base64 WITHOUT padding (the
+// same strings the reference argon2 tools produce and accept).
+const PHC_RE = /^\$argon2id\$v=19\$m=(\d+),t=(\d+),p=(\d+)\$([A-Za-z0-9+/]+)\$([A-Za-z0-9+/]+)$/;
+const phcB64 = (b: Uint8Array) => Buffer.from(b).toString('base64').replace(/=+$/, '');
+const phcB64Decode = (s: string) => new Uint8Array(Buffer.from(s, 'base64'));
 
-/** Returns a PHC-style string: $argon2id$v=19$m=…,t=…,p=…$salt$hash (base64url). */
+/** Returns a PHC string: $argon2id$v=19$m=…,t=…,p=…$salt$hash */
 export async function hashSecret(secret: string, p: Argon2Params): Promise<string> {
   const salt = new Uint8Array(nodeCrypto.randomBytes(16));
   const tag = await argon2id(utf8(secret), salt, p);
-  return `$argon2id$v=19$m=${p.memory},t=${p.passes},p=${p.parallelism}$${b64urlEncode(salt)}$${b64urlEncode(tag)}`;
+  return `$argon2id$v=19$m=${p.memory},t=${p.passes},p=${p.parallelism}$${phcB64(salt)}$${phcB64(tag)}`;
 }
 
 export async function verifySecret(secret: string, phc: string | null | undefined): Promise<boolean> {
@@ -46,8 +50,8 @@ export async function verifySecret(secret: string, phc: string | null | undefine
   const m = PHC_RE.exec(phc);
   if (!m) return false;
   const [, mem, t, par, saltB64, hashB64] = m;
-  const expected = b64urlDecode(hashB64!);
-  const actual = await argon2id(utf8(secret), b64urlDecode(saltB64!), { memory: Number(mem), passes: Number(t), parallelism: Number(par) }, expected.length);
+  const expected = phcB64Decode(hashB64!);
+  const actual = await argon2id(utf8(secret), phcB64Decode(saltB64!), { memory: Number(mem), passes: Number(t), parallelism: Number(par) }, expected.length);
   return timingSafeEqualBytes(actual, expected);
 }
 
