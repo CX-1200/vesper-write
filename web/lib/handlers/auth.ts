@@ -95,7 +95,7 @@ export async function handleLogin(req: Request, ctx: AppContext): Promise<Respon
 // POST /api/auth/logout
 export async function handleLogout(req: Request, ctx: AppContext): Promise<Response> {
   const a = await authDevice(req, ctx, { approved: false });
-  if (a instanceof Response) return a.status === 401 ? json({ ok: true }, 200, { 'Set-Cookie': clearSessionCookie() }) : a;
+  if (a instanceof Response) return a;
   await deleteSession(ctx, a.session.id_hash);
   await audit(ctx, { event: 'auth.logout', actor: `device:${a.device.id}`, result: 'ok', ip: a.ip });
   return json({ ok: true }, 200, { 'Set-Cookie': clearSessionCookie() });

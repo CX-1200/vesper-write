@@ -1,6 +1,7 @@
 // Server-side configuration. Secrets come only from environment variables
 // (on Vercel: Sensitive env vars). Error messages name the variable, never
-// its value. No secret here uses a NEXT_PUBLIC_ prefix (§18).
+// its value. None of them is exposed to the browser: Next's public-env
+// prefix is never used (§18).
 
 import { b64urlDecode } from '@vesper/core/encoding';
 
