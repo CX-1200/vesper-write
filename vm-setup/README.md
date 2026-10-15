@@ -18,7 +18,7 @@
 | 8 | [08-worker-service.md](08-worker-service.md) | systemd 服务与沙箱（逐行说明）、自检、启动 | VM |
 | 9 | [09-first-run.md](09-first-run.md) | 第一次配对、验收检查、加固完成后拍快照 | 手机 + VM |
 
-部署 Vercel 那一侧（环境变量、D1 数据库）请看根目录的 [README.md](../README.md)。顺序上：**先把 Vercel 部署好**（第 7 步的 `vesper init` 要连到它），再做第 7 步之后的部分。
+部署 Vercel 那一侧（环境变量、D1 数据库）请看[docs/deployment.md](../docs/deployment.md)。顺序上：**先把 Vercel 部署好**（第 7 步的 `vesper init` 要连到它），再做第 7 步之后的部分。
 
 ## 目录里的其他文件
 

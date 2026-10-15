@@ -5,7 +5,7 @@
 开始之前：
 
 - 02–06 已完成（`vesper` 用户、SSH、squid、nftables、Claude Code 和 token）。
-- **Vercel 已经部署好**，`SETUP_TOKEN` 已设定（见根目录 [README.md](../README.md)）。04 的 squid 白名单里已经有你的 Vercel 网域。
+- **Vercel 已经部署好**，`SETUP_TOKEN` 已设定（见 [docs/deployment.md](../docs/deployment.md)）。04 的 squid 白名单里已经有你的 Vercel 网域。
 
 ## 1. Node.js
 
