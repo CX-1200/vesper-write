@@ -118,9 +118,11 @@ node web\scripts\migrate.ts
 
 ## 阶段 C · 🌐 GitHub
 
-### C1. 把程序码合并进 main
+### C1. 默认分支设为 `main`
 
-目前所有程序码都在分支 `claude/new-session-hdsryc` 上。Vercel 的**正式环境（Production）默认部署 `main` 分支**，其他分支只会得到预览部署。所以先在 GitHub 开一个 Pull Request，把 `claude/new-session-hdsryc` 合并进 `main`。（要我帮你开 PR，跟我说一声。）
+`main` 分支已经建立（内容和工作分支 `claude/new-session-hdsryc` 相同）。Vercel 的**正式环境（Production）部署 `main`**。
+
+到 repo 的 **Settings → General → Default branch**，按切换的图示，把默认分支改成 `main`。之后 Claude 会在工作分支上修改，再开 Pull Request 合并进 `main`；合并后 Vercel 自动重新部署。
 
 ### C2. 开启安全设定
 
