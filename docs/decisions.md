@@ -83,7 +83,7 @@
 | worker 用 Ubuntu 26.04 官方仓库的 `nodejs`（22.22）执行，TypeScript 直接由 Node 的 type stripping 执行，不需要编译步骤 | VM 上少一个建置工具链，也少一层可被动手脚的产物。 |
 | Claude Code 用官方 apt 仓库安装（`downloads.claude.ai`，有 GPG 签名；安装前比对签名密钥指纹） | 二进位档由 root 拥有，`vesper` 用户改不了；apt 会验签；不会自动更新。apt 以 root 执行，不受 `vesper` 的出站规则限制，所以更新时**不需要**放宽规则（§16.4 的「暂时放宽」在这个设计下用不到）。 |
 | 调用 `claude -p` 时，子进程的 `HOME` 指到 `~/.local/share/vesper/claude-home`，`CLAUDE_CONFIG_DIR` 指到其下的 `.claude`，并在空的工作目录执行 | Claude Code 想写的东西都落在沙箱允许写入的目录；空的工作目录确保不会读到任何 `.claude/settings.json`、`.mcp.json` 或 CLAUDE.md。 |
-| 出站 proxy 建议用 **squid**（Ubuntu main 仓库，Canonical 安全团队维护）；tinyproxy 作为备选 | 比较见 `vm-setup/04-proxy.md`。**这一项需要你确认。** |
+| 出站 proxy 建议用 **squid**（Ubuntu main 仓库，Canonical 安全团队维护）；tinyproxy 作为备选 | 比较见 `vm-setup/04-proxy.md`。**你已于 2026-10-18 确认使用 squid。** |
 | worker 唯一的第三方依赖（`hpke`）用 `vm-setup/scripts/install-worker-deps.sh` 安装，不在 VM 上装 npm；脚本只下载 `package-lock.json` 锁定的版本，先比对 sha512 才解开 | Ubuntu 的 `npm` 套件会带进几百个 `node-*` 套件，对信任根这台 VM 来说攻击面太大。 |
 | 防火墙用 nftables（不用 ufw）；入站只让 Windows 主机的 VMnet8 位址连 SSH | ufw 不支持「依用户」的出站规则；只用一套工具避免规则互相干扰。只开放给主机（而不是整个 NAT 网段），同网段的其他 VM（例如 Kali）也连不进来。 |
 | systemd：`ProtectHome=tmpfs`，只把内容 repo（唯读）和资料目录（可写）挂回来；`IPAddressAllow=127.0.0.1`；用 `InaccessiblePaths=` 藏起 systemd-resolved 与 D-Bus 的 socket；加启动次数上限 | 比 §16.3 的范例（`ProtectHome=read-only`）更严：worker 看不到任何其他家目录。nftables 只管封包，经由 systemd-resolved 本机 socket 的 DNS 查询挡不到，藏起 socket 才能堵住 DNS 外传。离线估算的 `systemd-analyze security` 分数 1.1。 |

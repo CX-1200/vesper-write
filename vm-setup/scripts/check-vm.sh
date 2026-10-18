@@ -60,7 +60,7 @@ if have sshd; then
   echo "$T" | grep -qx 'kbdinteractiveauthentication no' && pass "不接受 keyboard-interactive" || fail "仍接受 keyboard-interactive"
   echo "$T" | grep -qx 'permitrootlogin no' && pass "root 不能登录" || fail "root 可以登录"
   if echo "$T" | grep -q '^allowusers '; then
-    if echo "$T" | grep '^allowusers ' | grep -qw vesper; then fail "AllowUsers 包含 vesper"; else pass "AllowUsers：$(echo "$T" | grep '^allowusers ' | cut -d' ' -f2-)"; fi
+    if echo "$T" | grep '^allowusers ' | grep -q '<'; then fail "AllowUsers 还是占位符（03 第 5 节）"; elif echo "$T" | grep '^allowusers ' | grep -qw vesper; then fail "AllowUsers 包含 vesper"; else pass "AllowUsers：$(echo "$T" | grep '^allowusers ' | cut -d' ' -f2-)"; fi
   else
     fail "没有设定 AllowUsers"
   fi

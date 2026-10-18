@@ -141,6 +141,8 @@ repo 的 **Settings → Code security**：开启 Secret scanning、Push protecti
 
 第一次部署不需要环境变量就能建置成功（环境变量是在**执行时**才读取的）。部署完成后，Vercel 会给你一个网址，例如 `https://vesper-write-abc123.vercel.app`。**记下这个网址**，下面要用；也要用在 VM 的设定里。
 
+之前遇过的「It looks like you're trying to use TypeScript but do not have the required package(s) installed」已经在程序码里修好（PR #1），不需要改任何 Vercel 设定。看错误时要往上找：`npm error Lifecycle script build failed` 只是总结，真正的原因印在它**上面**。
+
 如果部署在安装或建置阶段失败、讯息提到找不到 `@vesper/core` 或 `next`：到 **Settings → Build and Deployment**，把 Install Command 改成 `cd .. && npm ci`，Build Command 改成 `cd .. && npm run build:web`，再重新部署。（这是 README 提过的「我不确定」那一点。）
 
 ### D2. 填环境变量
@@ -149,7 +151,7 @@ repo 的 **Settings → Code security**：开启 Secret scanning、Push protecti
 
 | Key | Value |
 |---|---|
-| `APP_ORIGIN` | D1 的网址，例如 `https://vesper-write-abc123.vercel.app`（结尾不要 `/`） |
+| `APP_ORIGIN` | 上面 D1 步骤得到的**正式环境网址**（Overview → Domains），例如 `https://vesper-write-abc123.vercel.app`（结尾不要 `/`；不要用 PR 里的 Preview 网址） |
 | `SETUP_TOKEN` | B1 |
 | `TOTP_ENC_KEY` | B1 |
 | `VAPID_PUBLIC_KEY` | B1 |

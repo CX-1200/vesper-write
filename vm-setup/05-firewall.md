@@ -29,6 +29,12 @@ sudoedit /etc/nftables.conf
 
 把 `<host-vmnet8-ip>` 换成 Windows 主机在 VMware NAT 网段里的位址（01 第 4 节用 `ipconfig` 查到的「VMware Network Adapter VMnet8」，例如 `192.168.80.1`）。
 
+确认没有残留的占位符（应该**没有任何输出**）：
+
+```bash
+grep -n '<' /etc/nftables.conf
+```
+
 也可以在 VM 里交叉确认：
 
 ```bash
