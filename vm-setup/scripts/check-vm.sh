@@ -61,19 +61,22 @@ if have sshd; then
   # sshd -T fails (empty output) when /run/sshd does not exist yet, e.g. with
   # socket activation before the first connection. Report that instead of
   # five misleading FAILs.
-  T=$(sshd -T 2>/dev/null)
+  # Normalise: some OpenSSH builds print keywords in mixed case (PermitRootLogin)
+  # rather than lowercase, and lines may carry trailing whitespace.
+  T=$(sshd -T 2>/dev/null | tr '[:upper:]' '[:lower:]' | sed 's/[[:space:]]*$//')
   if [ -z "$T" ]; then
-    skip "sshd -T 无法执行：$(sshd -T 2>&1 >/dev/null | head -1)（见 03 第 6 节的确认指令）"
+    skip "sshd -T 无法执行：$(sshd -T 2>&1 >/dev/null | head -1)（手动执行 sudo sshd -T 看原因）"
   else
-  echo "$T" | grep -qx 'passwordauthentication no' && pass "不接受密码登录" || fail "仍接受密码登录"
-  echo "$T" | grep -qx 'kbdinteractiveauthentication no' && pass "不接受 keyboard-interactive" || fail "仍接受 keyboard-interactive"
-  echo "$T" | grep -qx 'permitrootlogin no' && pass "root 不能登录" || fail "root 可以登录"
-  if echo "$T" | grep -q '^allowusers '; then
-    if echo "$T" | grep '^allowusers ' | grep -q '<'; then fail "AllowUsers 还是占位符（03 第 5 节）"; elif echo "$T" | grep '^allowusers ' | grep -qw vesper; then fail "AllowUsers 包含 vesper"; else pass "AllowUsers：$(echo "$T" | grep '^allowusers ' | cut -d' ' -f2-)"; fi
+  echo "$T" | grep -qE '^passwordauthentication[[:space:]]+no$' && pass "不接受密码登录" || fail "仍接受密码登录"
+  echo "$T" | grep -qE '^kbdinteractiveauthentication[[:space:]]+no$' && pass "不接受 keyboard-interactive" || fail "仍接受 keyboard-interactive"
+  echo "$T" | grep -qE '^permitrootlogin[[:space:]]+no$' && pass "root 不能登录" || fail "root 可以登录"
+  AU=$(echo "$T" | grep -E '^allowusers[[:space:]]' | sed -E 's/^allowusers[[:space:]]+//')
+  if [ -n "$AU" ]; then
+    if echo "$AU" | grep -q '<'; then fail "AllowUsers 还是占位符（03 第 5 节）"; elif echo "$AU" | grep -qw vesper; then fail "AllowUsers 包含 vesper"; else pass "AllowUsers：$AU"; fi
   else
     fail "没有设定 AllowUsers"
   fi
-  echo "$T" | grep -qx 'allowtcpforwarding no' && pass "不允许 TCP 转发" || fail "允许 TCP 转发"
+  echo "$T" | grep -qE '^allowtcpforwarding[[:space:]]+no$' && pass "不允许 TCP 转发" || fail "允许 TCP 转发"
   fi
 else
   skip "没有安装 sshd"
