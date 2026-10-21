@@ -157,6 +157,31 @@ export async function handleDeviceRevoke(req: Request, ctx: AppContext, params: 
   return json({ ok: true });
 }
 
+// POST /api/devices/:id/rename — change a device's display name. The name is
+// only a label: it is not part of the VM's approval signature, and the VM keeps
+// its own copy from approval time (`vesper device list`), so nothing trusts it.
+export async function handleDeviceRename(req: Request, ctx: AppContext, params: { id: string }): Promise<Response> {
+  const a = await authDevice(req, ctx);
+  if (a instanceof Response) return a;
+  let id: string;
+  let name: string;
+  try {
+    id = uuid(params.id, 'id');
+    name = deviceName(asObject(parseJson(a.body)).name);
+  } catch {
+    return fail('bad_request');
+  }
+  const d = await getDevice(ctx, id);
+  if (!d) return fail('not_found');
+  if (d.revoked_at !== null) return fail('conflict');
+  await ctx.db.batch([
+    { sql: 'UPDATE devices SET name = ? WHERE id = ? AND revoked_at IS NULL', params: [name, id] },
+    // The name itself stays out of the audit log: it is user-typed text.
+    auditStatement(ctx, { event: 'device.rename', actor: `device:${a.device.id}`, result: 'ok', ip: a.ip, detail: { device: id } }),
+  ]);
+  return json({ ok: true, name });
+}
+
 // GET /api/vm — VM public keys, fingerprint and online status. Devices use the
 // keys only during pairing; afterwards they compare with their pinned copy.
 export async function handleVm(req: Request, ctx: AppContext): Promise<Response> {

@@ -4,7 +4,7 @@
 // they saved them (last group of each) before the hashes are sent.
 
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { generateUserSecret } from './secrets.ts';
+import { formatSecretInput, generateUserSecret } from './secrets.ts';
 
 export type SecretKind = 'recovery_key' | 'break_glass_key' | 'kill_token';
 
@@ -60,6 +60,7 @@ export function NewSecrets({
   return (
     <form onSubmit={submit}>
       <p>下面的内容只会显示这一次。服务器只保存它们的哈希，无法帮你找回。</p>
+      <p className="small muted">只会出现大写字母 A–Z 和数字 2–7，<strong>没有数字 0、1、8、9</strong>：看起来像 0 的是字母 O，像 1 的是字母 I。抄写时请照这个规则；输入时打成 0 或 1 也会自动换成 O 和 I。</p>
       {kinds.map((k) => (
         <div key={k}>
           <h3>{INFO[k].title}</h3>
@@ -80,7 +81,7 @@ export function NewSecrets({
               spellCheck={false}
               maxLength={4}
               value={typed[k] ?? ''}
-              onChange={(e) => setTyped({ ...typed, [k]: e.target.value })}
+              onChange={(e) => setTyped({ ...typed, [k]: formatSecretInput(e.target.value) })}
             />
           </div>
         ))}

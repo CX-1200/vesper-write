@@ -282,6 +282,7 @@ function Totp({ step, setStep, token }: { step: Extract<Step, { s: 'totp' }>; se
       </p>
       <p className="small muted">不要把 TOTP 放在这台设备上：这台设备遗失时，密码和 TOTP 才不会一起落入别人手里。这组密钥只显示这一次。</p>
       <div className="secret-box">{groupSecret(step.secret)}</div>
+      <p className="small muted">「-」只是为了方便对照；在验证器 App 里输入时只输入字母和数字，不要输入「-」。</p>
       <dl className="kv small">
         <dt>发行者</dt>
         <dd>Vesper</dd>

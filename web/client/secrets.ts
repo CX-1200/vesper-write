@@ -33,3 +33,18 @@ export function urlBase64ToUint8Array(s: string): Uint8Array<ArrayBuffer> {
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
+
+/**
+ * Format what the user types into a secret field: upper case, only letters and
+ * digits, at most 32 of them, and a '-' after every 4 (ABCD-EFGH-…), matching
+ * how the secret was shown. The alphabet (base32: A–Z, 2–7) has no 0 or 1, so
+ * a typed 0 must have been the letter O and a 1 the letter I. 8 and 9 are kept
+ * so the server rejects the typo instead of the field silently dropping it.
+ */
+export function formatSecretInput(typed: string): string {
+  const chars = typed.toUpperCase().replace(/0/g, 'O').replace(/1/g, 'I').replace(/[^A-Z0-9]/g, '').slice(0, 32);
+  return chars.match(/.{1,4}/g)?.join('-') ?? '';
+}
+
+/** Length of the formatted secret: 32 characters plus 7 dashes. */
+export const SECRET_INPUT_MAX = 39;

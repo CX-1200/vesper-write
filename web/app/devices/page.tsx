@@ -4,10 +4,11 @@
 // right away; the VM (the trust root) must also be told with
 // `vesper device revoke`, otherwise it keeps encrypting outputs for it.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { api, call, describeError, toError } from '../../client/api.ts';
 import type { Identity } from '../../client/identity.ts';
 import { Fingerprint, Gated, Page, time, useVesper } from '../../client/ui.tsx';
+import { DEVICE_NAME_MAX } from '@vesper/core/schemas';
 
 interface Device {
   id: string;
@@ -36,6 +37,7 @@ function Devices({ identity, vmFingerprint }: { identity: Identity; vmFingerprin
   const [error, setError] = useState('');
   const [confirming, setConfirming] = useState<string | null>(null);
   const [revoked, setRevoked] = useState<Device | null>(null);
+  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
 
   const load = useCallback(() => {
     api<{ devices: Device[] }>(identity, 'GET', '/api/devices')
@@ -51,6 +53,16 @@ function Devices({ identity, vmFingerprint }: { identity: Identity; vmFingerprin
     setConfirming(null);
     if (!r.ok) return setError(describeError(toError(r)));
     setRevoked(d);
+    load();
+  }
+
+  async function rename(e: FormEvent) {
+    e.preventDefault();
+    if (!renaming) return;
+    setError('');
+    const r = await call(identity, 'POST', `/api/devices/${renaming.id}/rename`, { name: renaming.name.trim() });
+    if (!r.ok) return setError(describeError(toError(r)));
+    setRenaming(null);
     load();
   }
 
@@ -105,6 +117,34 @@ function Devices({ identity, vmFingerprint }: { identity: Identity; vmFingerprin
                   <dt>Passkey</dt>
                   <dd>{d.has_passkey ? '有' : '无'}</dd>
                 </dl>
+                {!d.revoked_at ? (
+                  renaming?.id === d.id ? (
+                    <form className="actions" onSubmit={rename}>
+                      <label htmlFor={`name-${d.id}`} className="small">
+                        新名称
+                      </label>
+                      <input
+                        id={`name-${d.id}`}
+                        value={renaming.name}
+                        maxLength={DEVICE_NAME_MAX}
+                        autoFocus
+                        onChange={(e) => setRenaming({ id: d.id, name: e.target.value })}
+                      />
+                      <button type="submit" disabled={!renaming.name.trim()}>
+                        保存
+                      </button>
+                      <button type="button" className="secondary" onClick={() => setRenaming(null)}>
+                        取消
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="actions">
+                      <button className="secondary" onClick={() => setRenaming({ id: d.id, name: d.name })}>
+                        更改名称
+                      </button>
+                    </div>
+                  )
+                ) : null}
                 {!d.revoked_at && !d.is_me ? (
                   confirming === d.id ? (
                     <div className="banner danger">
@@ -139,6 +179,7 @@ function Devices({ identity, vmFingerprint }: { identity: Identity; vmFingerprin
         <h2>新增设备</h2>
         <p>在新设备上打开这个网站的 /enroll，输入 recovery key。所有设备都会收到警报（R2），然后在 VM 终端比对指纹并批准。</p>
         <p className="small muted">设备遗失时：先在这里撤销，再在 VM 终端执行 vesper device revoke。</p>
+        <p className="small muted">更改名称只影响这里的显示；VM 终端的 vesper device list 仍显示批准时的名称。</p>
       </section>
     </>
   );

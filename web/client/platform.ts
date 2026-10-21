@@ -21,9 +21,9 @@ export function defaultDeviceName(): string {
   return '我的设备';
 }
 
-/** Group a base32 string for display: ABCD EFGH … */
+/** Group a base32 string for display: ABCD-EFGH-…, like the other secrets. */
 export function groupSecret(s: string, size = 4): string {
-  return (s.match(new RegExp(`.{1,${size}}`, 'g')) ?? []).join(' ');
+  return (s.match(new RegExp(`.{1,${size}}`, 'g')) ?? []).join('-');
 }
 
 /** Only allow same-origin relative paths as post-login redirects. */

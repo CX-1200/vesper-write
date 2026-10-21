@@ -11,6 +11,7 @@ import { Pairing, type VmKeys } from '../../client/pairing.tsx';
 import { defaultDeviceName, isIos, isStandalone } from '../../client/platform.ts';
 import { NewSecrets } from '../../client/secrets-ui.tsx';
 import { Page, type Me } from '../../client/ui.tsx';
+import { SecretInput } from '../../client/secret-input.tsx';
 
 type Step =
   | { s: 'loading' }
@@ -186,16 +187,7 @@ function EnrollForm({ setStep }: { setStep: (s: Step) => void }) {
       </p>
       <form onSubmit={submit}>
         <label htmlFor="rk">Recovery key</label>
-        <input
-          id="rk"
-          type="password"
-          className="secret"
-          autoComplete="off"
-          autoCapitalize="characters"
-          spellCheck={false}
-          value={recovery}
-          onChange={(e) => setRecovery(e.target.value)}
-        />
+        <SecretInput id="rk" value={recovery} onChange={setRecovery} />
         <label htmlFor="name">设备名称</label>
         <input id="name" type="text" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} />
         {error ? <p className="error">{error}</p> : null}

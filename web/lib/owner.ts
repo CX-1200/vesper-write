@@ -86,6 +86,7 @@ export async function setupTokenValid(ctx: AppContext, provided: unknown): Promi
  */
 export function normalizeUserSecret(v: unknown): string | null {
   if (typeof v !== 'string' || v.length > 128) return null;
-  const s = v.toUpperCase().replace(/[\s-]/g, '');
+  // base32 has no 0 or 1: read them as the letters O and I they look like
+  const s = v.toUpperCase().replace(/[\s-]/g, '').replace(/0/g, 'O').replace(/1/g, 'I');
   return /^[A-Z2-7]{32}$/.test(s) ? s : null;
 }

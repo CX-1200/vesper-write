@@ -260,3 +260,39 @@ test('§18: tokens, keys, the password and the TOTP secret are never stored in p
   assert.ok(!String(owner!.totp_secret_enc).includes(totpSecret));
   vm.cleanup();
 });
+
+test('renaming a device: validated, audited without the name, VM approval still verifies, revoked devices stay as they were', async () => {
+  const h = makeHarness();
+  const { vm, phone } = await fullSetup(h);
+  const r = await phone.req('POST', `/api/devices/${phone.id}/rename`, { name: '  我的 iPhone  ' });
+  assert.equal(r.status, 200, JSON.stringify(r.json));
+  assert.equal(r.json.name, '我的 iPhone');
+  assert.equal((await phone.req('GET', '/api/devices/me')).json.name, '我的 iPhone');
+  // the name is a label only: the VM's approval signature does not cover it
+  const me = await phone.req('GET', '/api/devices/me');
+  assert.ok(me.json.vm_approved_at && me.json.vm_approval_sig);
+  const audit = await h.sql("SELECT detail FROM audit_log WHERE event = 'device.rename'");
+  assert.equal(audit.length, 1);
+  assert.ok(!String(audit[0]!.detail).includes('iPhone'));
+  // invalid names and ids
+  for (const name of ['', '   ', 'x'.repeat(41), '<b>', 'a\nb', 7]) {
+    assert.equal((await phone.req('POST', `/api/devices/${phone.id}/rename`, { name })).status, 400, String(name));
+  }
+  assert.equal((await phone.req('POST', '/api/devices/not-a-uuid/rename', { name: 'x' })).status, 400);
+  assert.equal((await phone.req('POST', `/api/devices/${crypto.randomUUID()}/rename`, { name: 'x' })).status, 404);
+  // a device without a session cannot rename anything
+  const stranger = await SimDevice.create(h, 'Stranger');
+  assert.equal((await stranger.req('POST', `/api/devices/${phone.id}/rename`, { name: 'x' })).status, 401);
+  vm.cleanup();
+});
+
+test('renaming a revoked device is refused', async () => {
+  const h = makeHarness();
+  const { vm, phone, secrets } = await fullSetup(h);
+  const laptop = await SimDevice.create(h, 'Laptop');
+  await laptop.req('POST', '/api/devices/enroll/start', { recovery_key: secrets.recovery_key, device: laptop.publicKeys });
+  assert.equal((await laptop.req('POST', `/api/devices/${laptop.id}/rename`, { name: 'x' })).status, 403);
+  assert.equal((await phone.req('POST', `/api/devices/${laptop.id}/revoke`, {})).status, 200);
+  assert.equal((await phone.req('POST', `/api/devices/${laptop.id}/rename`, { name: 'x' })).status, 409);
+  vm.cleanup();
+});

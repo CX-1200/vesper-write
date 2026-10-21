@@ -189,7 +189,7 @@ test('PWA end to end: setup, pairing, ticket, review, tamper, audit, kill switch
 
     // 2. TOTP
     await page.getByRole('heading', { name: '绑定 TOTP 验证器' }).waitFor();
-    const totpSecret = (await text('.secret-box')).replace(/\s/g, '');
+    const totpSecret = (await text('.secret-box')).replace(/[\s-]/g, '');
     await shot('02-totp');
     await page.fill('#code', totpAt(base32Decode(totpSecret), Date.now()));
     await page.getByRole('button', { name: '确认' }).click();
