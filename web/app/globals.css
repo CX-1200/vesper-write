@@ -299,6 +299,7 @@ textarea {
 input.code,
 input.secret {
   font-family: var(--mono);
+  font-variant-numeric: slashed-zero;
   letter-spacing: 0.05em;
 }
 
@@ -508,6 +509,7 @@ button.block,
 
 .secret-box {
   font-family: var(--mono);
+  font-variant-numeric: slashed-zero;
   font-size: 1.05rem;
   letter-spacing: 0.04em;
   background: var(--surface-2);

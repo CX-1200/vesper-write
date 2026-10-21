@@ -239,7 +239,9 @@ test('secret inputs: dashes every 4 characters, upper case, capped at 32 charact
   assert.equal(formatSecretInput('ABCD-'), 'ABCD');
   assert.equal(formatSecretInput('ab cd-ef  gh'), 'ABCD-EFGH');
   assert.equal(formatSecretInput('A'.repeat(40)), 'AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA');
-  assert.equal(formatSecretInput('ABC0'), 'ABC0');
+  // 0 and 1 are not in the alphabet: they become the letters O and I; 8 and 9 stay for the server to reject
+  assert.equal(formatSecretInput('ab01'), 'ABOI');
+  assert.equal(formatSecretInput('AB89'), 'AB89');
   // a generated secret round-trips unchanged and fits the field
   const s = generateUserSecret();
   assert.equal(formatSecretInput(s), s);
