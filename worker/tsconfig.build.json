@@ -1,0 +1,16 @@
+{
+  // Emits plain JavaScript into dist/ (dist/src, dist/cli) for the VM.
+  // Generated output is committed; CI checks it matches the sources.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": ".",
+    "outDir": "dist",
+    "rewriteRelativeImportExtensions": true,
+    "declaration": false,
+    "sourceMap": false,
+    "removeComments": false,
+    "newLine": "lf"
+  },
+  "include": ["src/**/*.ts", "cli/**/*.ts"]
+}

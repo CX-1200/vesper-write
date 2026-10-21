@@ -2,6 +2,7 @@
 // on stdout (journald) and never contain request content or secrets.
 
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { loadConfig, readCredential } from './config.ts';
 import { paths } from './paths.ts';
@@ -16,7 +17,10 @@ export const log: LogFn = (event, fields = {}) => {
   process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event, ...fields }) + '\n');
 };
 
-export const SYSTEM_PROMPT_FILE = fileURLToPath(new URL('../assets/system-prompt.md', import.meta.url));
+// worker/src/main.ts → ../assets; compiled worker/dist/src/main.js → ../../assets
+export const SYSTEM_PROMPT_FILE = [new URL('../assets/system-prompt.md', import.meta.url), new URL('../../assets/system-prompt.md', import.meta.url)]
+  .map((u) => fileURLToPath(u))
+  .find((p) => existsSync(p)) ?? fileURLToPath(new URL('../assets/system-prompt.md', import.meta.url));
 
 export async function buildProcessorAndClient() {
   const cfg = loadConfig();

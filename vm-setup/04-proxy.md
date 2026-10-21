@@ -23,7 +23,7 @@
 | 资源 | 较大，但对这台 VM 不是问题 | 很小 |
 | 设定 | 档案大，但我们只用约 20 行 | 简单 |
 
-**我的建议是 squid**：有 Canonical 的安全更新，白名单是精确比对而不是正规表示式。这是需要你确认的决定（docs/decisions.md）。下面的步骤用 squid；如果你选 tinyproxy，告诉我，我再补上对应的设定和测试。
+**已决定使用 squid**（2026-10-18 你确认）：有 Canonical 的安全更新，白名单是精确比对而不是正规表示式。
 
 ## 2. 安装与设定
 
@@ -34,7 +34,13 @@ sudo install -o root -g root -m 0644 /opt/vesper/vm-setup/files/squid.conf /etc/
 sudoedit /etc/squid/squid.conf
 ```
 
-在编辑器里把 `<your-vercel-domain>` 改成你的 Vercel 网域，例如 `vesper-abc123.vercel.app`（不要加 `https://`，也不要加路径）。如果你用自己的网域，就填那个网域。
+在编辑器里把 `<your-vercel-domain>` 改成你的 Vercel **正式环境**网域（Vercel 专案 Overview 页面的 Domains，例如 `vesper-write-abc123.vercel.app`；不是 PR 留言里那种很长的 Preview 网址）。不要加 `https://`，也不要加路径。
+
+确认没有残留的占位符（应该**没有任何输出**）：
+
+```bash
+grep -n '<' /etc/squid/squid.conf
+```
 
 检查语法、重启、设为开机启动：
 

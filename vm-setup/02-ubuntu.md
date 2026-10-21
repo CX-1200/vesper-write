@@ -102,11 +102,14 @@ sudo apt purge snapd
 
 ```bash
 sudo apt install git                 # 通常已经装好
-sudo git clone https://github.com/<你的 GitHub 帐号>/<repo 名称>.git /opt/vesper
+sudo git clone https://github.com/CX-1200/vesper-write.git /opt/vesper
 sudo git -C /opt/vesper log -1 --format='%H %s'
 ```
 
+> **常见错误：** 指令结尾一定要有 `/opt/vesper`，前面一定要有 `sudo`。少了 `/opt/vesper`，git 会把程序码放到你目前所在的目录（例如 `~/vesper-write`），之后所有指令都会显示 `No such file or directory`。放错地方时：`rm -rf ~/vesper-write`，再执行一次上面的 clone。
+
 - 如果 repo 是**私有**的：git 会问帐号和密码。密码栏位请贴一个 GitHub **fine-grained personal access token**，权限只给这一个 repo 的 *Contents: Read-only*，有效期设短一点（例如 7 天）。输入时不会显示，也不会存起来（这台 VM 没有设定 credential helper）。用完可以到 GitHub 删除这个 token。
+- clone 时下载的是默认分支 `main`（Vercel 部署的也是它）。
 - 最后一行印出的 commit hash，和 GitHub 网页上你要部署的那个 commit 比对一致，才继续。这样可以确认 VM 拿到的就是你看过的程序码。
 
 确认权限：

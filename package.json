@@ -17,7 +17,8 @@
     "test:web": "node --test --test-concurrency=1 \"tests/web/*.test.ts\"",
     "test:e2e": "node --test --test-concurrency=1 \"tests/e2e/*.test.ts\"",
     "typecheck": "tsc -p packages/core && tsc -p worker && tsc -p web --noEmit",
-    "build:web": "npm run build -w web"
+    "build:web": "npm run build -w web",
+    "build:worker": "rm -rf packages/core/dist worker/dist && tsc -p packages/core/tsconfig.build.json && tsc -p worker/tsconfig.build.json"
   },
   "devDependencies": {
     "@types/node": "24.19.0",

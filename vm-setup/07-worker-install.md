@@ -14,7 +14,9 @@ sudo apt install nodejs
 node --version
 ```
 
-需要 **v22.18 以上**（Node 从 22.18 起默认可以直接执行 TypeScript；Ubuntu 26.04 的套件是 22.22.1，docs/verification.md 第 12 项）。**不需要装 npm**，见第 3 节。
+需要 **v22 以上**。用 Ubuntu 自己的 `nodejs` 套件就好：它的安全更新由 `unattended-upgrades` 自动处理。**不需要装 npm**，见第 3 节。
+
+> **为什么是 `dist/`：** Ubuntu 的 `nodejs` 编译时没有包含「直接执行 TypeScript」的功能（`node -p "process.features.typescript"` 会印出 `false`）。所以 repo 里除了 `.ts` 原始码，还 commit 了编译好的 JavaScript：`worker/dist/` 和 `packages/core/dist/`。VM 只执行这些 `.js` 档。每个 PR 都有 GitHub Actions 检查从原始码重新编译的结果和 commit 的 `dist/` **逐字相同**，不同就不能合并，所以 VM 执行的永远是你看到的原始码的忠实编译结果。编译只是拿掉类型标注，没有打包或压缩，`dist/` 里的程序仍然可以直接阅读。
 
 ## 2. 程序码
 

@@ -15,7 +15,7 @@ Type=simple
 User=vesper
 Group=vesper
 WorkingDirectory=/home/vesper/.local/share/vesper
-ExecStart=/usr/bin/node --disable-warning=ExperimentalWarning /opt/vesper/worker/src/main.ts
+ExecStart=/usr/bin/node --conditions=vesper-js /opt/vesper/worker/dist/src/main.js
 
 Environment=NODE_ENV=production
 Environment=VESPER_CONFIG=/etc/vesper/worker.json
