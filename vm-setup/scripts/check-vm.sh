@@ -44,10 +44,13 @@ else
   fail "没有 vesper 用户（02 第 5 节）"
 fi
 if [ -d /opt/vesper ]; then
-  if [ "$(stat -c '%U' /opt/vesper)" = root ] && [ -z "$(find /opt/vesper -path /opt/vesper/.git -prune -o -perm /022 -print -quit 2>/dev/null)" ]; then
+  OWNER_BAD=$(find /opt/vesper -path /opt/vesper/.git -prune -o ! -user root -print -quit 2>/dev/null)
+  WRITE_BAD=$(find /opt/vesper -path /opt/vesper/.git -prune -o ! -type l -perm /022 -print -quit 2>/dev/null)
+  if [ -z "$OWNER_BAD" ] && [ -z "$WRITE_BAD" ]; then
     pass "/opt/vesper 由 root 拥有，其他人不能写入"
   else
-    fail "/opt/vesper 的拥有者或权限不对（应为 root，且没有 group/other 写入权）"
+    [ -n "$OWNER_BAD" ] && fail "/opt/vesper 里有不属于 root 的档案，例如：$OWNER_BAD"
+    [ -n "$WRITE_BAD" ] && fail "/opt/vesper 里有 group/other 可写入的档案，例如：$WRITE_BAD"
   fi
 else
   skip "/opt/vesper 还不存在（02 第 7 节）"
@@ -55,7 +58,13 @@ fi
 
 section "03 · SSH"
 if have sshd; then
+  # sshd -T fails (empty output) when /run/sshd does not exist yet, e.g. with
+  # socket activation before the first connection. Report that instead of
+  # five misleading FAILs.
   T=$(sshd -T 2>/dev/null)
+  if [ -z "$T" ]; then
+    skip "sshd -T 无法执行：$(sshd -T 2>&1 >/dev/null | head -1)（见 03 第 6 节的确认指令）"
+  else
   echo "$T" | grep -qx 'passwordauthentication no' && pass "不接受密码登录" || fail "仍接受密码登录"
   echo "$T" | grep -qx 'kbdinteractiveauthentication no' && pass "不接受 keyboard-interactive" || fail "仍接受 keyboard-interactive"
   echo "$T" | grep -qx 'permitrootlogin no' && pass "root 不能登录" || fail "root 可以登录"
@@ -65,6 +74,7 @@ if have sshd; then
     fail "没有设定 AllowUsers"
   fi
   echo "$T" | grep -qx 'allowtcpforwarding no' && pass "不允许 TCP 转发" || fail "允许 TCP 转发"
+  fi
 else
   skip "没有安装 sshd"
 fi
