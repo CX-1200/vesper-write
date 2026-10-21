@@ -5,6 +5,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { Page } from '../../client/ui.tsx';
+import { SecretInput } from '../../client/secret-input.tsx';
 
 export default function KillPage() {
   const [token, setToken] = useState('');
@@ -60,19 +61,14 @@ export default function KillPage() {
         <p className="small muted">这个页面不需要登录，任何浏览器都能用。kill token 只能封锁，不能做其他事。</p>
         <form onSubmit={submit}>
           <label htmlFor="kt">Kill token</label>
-          <input
-            id="kt"
-            type="password"
-            className="secret"
-            autoComplete="off"
-            autoCapitalize="characters"
-            spellCheck={false}
-            value={token}
-            onChange={(e) => {
-              setToken(e.target.value);
-              setArmed(false);
-            }}
-          />
+          <SecretInput
+          id="kt"
+          value={token}
+          onChange={(v) => {
+            setToken(v);
+            setArmed(false);
+          }}
+        />
           {armed ? <p className="banner danger">确定要封锁整个系统吗？再按一次下面的按钮确认。</p> : null}
           {error ? <p className="error">{error}</p> : null}
           <div className="actions">

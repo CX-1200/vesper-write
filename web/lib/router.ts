@@ -5,7 +5,7 @@
 import type { AppContext } from './context.ts';
 import { handleSetup } from './handlers/setup.ts';
 import { handleLogin, handleLogout, handlePasskeyOptions, handlePasskeyVerify } from './handlers/auth.ts';
-import { handleDeviceList, handleDeviceMe, handleDeviceRevoke, handleEnrollStart, handleVm } from './handlers/devices.ts';
+import { handleDeviceList, handleDeviceMe, handleDeviceRename, handleDeviceRevoke, handleEnrollStart, handleVm } from './handlers/devices.ts';
 import { handleTicketCreate, handleTicketGet, handleTicketList, handleTicketReject, handleTicketReviewed, handleTicketUsed } from './handlers/tickets.ts';
 import { handleAlerts, handleAudit, handleConfig, handleKill, handlePushSubscribe, handleSecretsRotate } from './handlers/misc.ts';
 import { handleWorkerAlert, handleWorkerDeviceApproval, handleWorkerPull, handleWorkerRegister, handleWorkerResult } from './handlers/worker.ts';
@@ -22,6 +22,7 @@ export const ROUTES: Array<{ method: 'GET' | 'POST'; path: string; handler: Hand
   { method: 'GET', path: '/api/devices/me', handler: handleDeviceMe },
   { method: 'POST', path: '/api/devices/enroll/start', handler: handleEnrollStart },
   { method: 'POST', path: '/api/devices/[id]/revoke', handler: handleDeviceRevoke },
+  { method: 'POST', path: '/api/devices/[id]/rename', handler: handleDeviceRename },
   { method: 'GET', path: '/api/vm', handler: handleVm },
   { method: 'GET', path: '/api/tickets', handler: handleTicketList },
   { method: 'POST', path: '/api/tickets', handler: handleTicketCreate },

@@ -228,3 +228,21 @@ test('§18: logging calls never print request bodies, tokens or decrypted conten
     }
   }
 });
+
+test('secret inputs: dashes every 4 characters, upper case, capped at 32 characters, typos kept for the server to reject', async () => {
+  const { formatSecretInput, generateUserSecret, SECRET_INPUT_MAX } = await import('../../web/client/secrets.ts');
+  assert.equal(formatSecretInput(''), '');
+  assert.equal(formatSecretInput('abc'), 'ABC');
+  assert.equal(formatSecretInput('abcd'), 'ABCD');
+  assert.equal(formatSecretInput('abcde'), 'ABCD-E');
+  // typing past a dash, deleting back over it, and pasting with spaces or dashes all settle on the same form
+  assert.equal(formatSecretInput('ABCD-'), 'ABCD');
+  assert.equal(formatSecretInput('ab cd-ef  gh'), 'ABCD-EFGH');
+  assert.equal(formatSecretInput('A'.repeat(40)), 'AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA-AAAA');
+  assert.equal(formatSecretInput('ABC0'), 'ABC0');
+  // a generated secret round-trips unchanged and fits the field
+  const s = generateUserSecret();
+  assert.equal(formatSecretInput(s), s);
+  assert.equal(formatSecretInput(s.toLowerCase().replace(/-/g, '')), s);
+  assert.equal(s.length, SECRET_INPUT_MAX);
+});
