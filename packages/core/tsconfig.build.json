@@ -1,0 +1,16 @@
+{
+  // Emits plain JavaScript into dist/ for the VM worker (Ubuntu's Node cannot run .ts).
+  // Generated output is committed; CI checks it matches the sources (.github/workflows/ci.yml).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": "src",
+    "outDir": "dist",
+    "rewriteRelativeImportExtensions": true,
+    "declaration": false,
+    "sourceMap": false,
+    "removeComments": false,
+    "newLine": "lf"
+  },
+  "include": ["src/**/*.ts"]
+}

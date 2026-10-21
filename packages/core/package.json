@@ -5,8 +5,14 @@
   "type": "module",
   "description": "Shared code for web and worker: schemas, crypto envelopes, signatures, fingerprints, lint, state machines.",
   "exports": {
-    ".": "./src/index.ts",
-    "./*": "./src/*.ts"
+    ".": {
+      "vesper-js": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "vesper-js": "./dist/*.js",
+      "default": "./src/*.ts"
+    }
   },
   "dependencies": {
     "hpke": "1.1.7"

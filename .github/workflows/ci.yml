@@ -1,0 +1,33 @@
+# CI for every pull request and for main.
+# The VM runs the committed JavaScript in worker/dist and packages/core/dist
+# (Ubuntu's Node cannot run TypeScript), so the "dist is up to date" step is
+# what guarantees the VM runs exactly what the reviewed sources compile to.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - name: dist is up to date
+        run: |
+          npm run build:worker
+          if [ -n "$(git status --porcelain -- worker/dist packages/core/dist)" ]; then
+            git status --porcelain -- worker/dist packages/core/dist
+            echo "::error::worker/dist or packages/core/dist differs from the sources. Run 'npm run build:worker' and commit the result."
+            exit 1
+          fi
+      - run: npm run typecheck
+      - run: npm test

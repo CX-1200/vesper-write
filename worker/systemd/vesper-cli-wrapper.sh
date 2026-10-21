@@ -10,4 +10,4 @@ export VESPER_CONFIG=/etc/vesper/worker.json
 export NODE_USE_ENV_PROXY=1
 export HTTPS_PROXY=http://127.0.0.1:3128
 export HTTP_PROXY=http://127.0.0.1:3128
-exec /usr/bin/node --disable-warning=ExperimentalWarning /opt/vesper/worker/cli/vesper.ts "$@"
+exec /usr/bin/node --conditions=vesper-js /opt/vesper/worker/dist/cli/vesper.js "$@"

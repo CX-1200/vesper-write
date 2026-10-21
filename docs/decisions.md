@@ -80,7 +80,7 @@
 
 | 决定 | 理由 |
 |---|---|
-| worker 用 Ubuntu 26.04 官方仓库的 `nodejs`（22.22）执行，TypeScript 直接由 Node 的 type stripping 执行，不需要编译步骤 | VM 上少一个建置工具链，也少一层可被动手脚的产物。 |
+| worker 用 Ubuntu 官方仓库的 `nodejs` 执行**编译好的 JavaScript**（`worker/dist/`、`packages/core/dist/`，commit 在 repo 里，经由 `--conditions=vesper-js` 载入）；CI 检查 `dist/` 与原始码重新编译的结果逐字相同（2026-10-21 你选择的方案 B） | Ubuntu 的 `nodejs` 不支持直接执行 TypeScript（实测 `process.features.typescript` 为 `false`）。这样 VM 仍然不需要建置工具链，Node 的安全更新也由 Ubuntu 自动处理。 |
 | Claude Code 用官方 apt 仓库安装（`downloads.claude.ai`，有 GPG 签名；安装前比对签名密钥指纹） | 二进位档由 root 拥有，`vesper` 用户改不了；apt 会验签；不会自动更新。apt 以 root 执行，不受 `vesper` 的出站规则限制，所以更新时**不需要**放宽规则（§16.4 的「暂时放宽」在这个设计下用不到）。 |
 | 调用 `claude -p` 时，子进程的 `HOME` 指到 `~/.local/share/vesper/claude-home`，`CLAUDE_CONFIG_DIR` 指到其下的 `.claude`，并在空的工作目录执行 | Claude Code 想写的东西都落在沙箱允许写入的目录；空的工作目录确保不会读到任何 `.claude/settings.json`、`.mcp.json` 或 CLAUDE.md。 |
 | 出站 proxy 建议用 **squid**（Ubuntu main 仓库，Canonical 安全团队维护）；tinyproxy 作为备选 | 比较见 `vm-setup/04-proxy.md`。**你已于 2026-10-18 确认使用 squid。** |

@@ -24,7 +24,7 @@ sudo systemd-analyze verify /etc/systemd/system/vesper-worker.service /etc/syste
 |---|---|
 | `User=vesper`、`Group=vesper` | 以没有 sudo 的 `vesper` 用户执行 |
 | `WorkingDirectory=/home/vesper/.local/share/vesper` | worker 的资料目录（VM 私钥、可信设备清单、本地锁、本地记录） |
-| `ExecStart=/usr/bin/node … /opt/vesper/worker/src/main.ts` | 程序码在 root 拥有的 `/opt/vesper`，`vesper` 改不了它 |
+| `ExecStart=/usr/bin/node --conditions=vesper-js /opt/vesper/worker/dist/src/main.js` | 执行已编译好的 JavaScript（`dist/`，见 07 第 1 节）；`--conditions=vesper-js` 让 `@vesper/core` 也载入编译版。程序码在 root 拥有的 `/opt/vesper`，`vesper` 改不了它 |
 | `Environment=NODE_USE_ENV_PROXY=1`、`HTTPS_PROXY=…` | 让 Node 内建的 `fetch` 走 squid（docs/verification.md「额外查到」） |
 | `StartLimitIntervalSec=600`、`StartLimitBurst=10` | 设定错误时 worker 会结束；10 分钟内失败 10 次就不再重试，避免无限重启 |
 | `Restart=on-failure`、`RestartSec=10` | 意外结束时 10 秒后重启（网络问题由 worker 自己用指数退避处理，不会让它结束） |
