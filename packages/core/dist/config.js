@@ -56,6 +56,8 @@ export const CONFIG = {
     workerBackoff: { failuresBeforeBackoff: 5, baseMs: 30_000, maxMs: 15 * MINUTE },
     /** the VM counts as online if it pulled within this window */
     vmOnlineThresholdMs: 3 * 30_000,
+    // a revoked device stays listed this long before it can be removed from the list
+    revokedDeviceRetentionMs: 72 * 60 * 60_000,
     // ---- audit (§14) ----
     auditRetentionDays: 90,
     auditSimpleLimit: 50,

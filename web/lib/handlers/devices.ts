@@ -182,6 +182,31 @@ export async function handleDeviceRename(req: Request, ctx: AppContext, params: 
   return json({ ok: true, name });
 }
 
+// POST /api/devices/:id/remove — drop a revoked device from the list once
+// CONFIG.revokedDeviceRetentionMs has passed. Its sessions and push
+// subscriptions go with it; its tickets and audit entries stay.
+export async function handleDeviceRemove(req: Request, ctx: AppContext, params: { id: string }): Promise<Response> {
+  const a = await authDevice(req, ctx);
+  if (a instanceof Response) return a;
+  let id: string;
+  try {
+    id = uuid(params.id, 'id');
+  } catch {
+    return fail('bad_request');
+  }
+  const d = await getDevice(ctx, id);
+  if (!d) return fail('not_found');
+  if (d.revoked_at === null || a.now - d.revoked_at < CONFIG.revokedDeviceRetentionMs) return fail('conflict');
+  await ctx.db.batch([
+    // explicit, so it does not depend on the database enforcing ON DELETE CASCADE
+    { sql: 'DELETE FROM sessions WHERE device_id = ?', params: [id] },
+    { sql: 'DELETE FROM push_subscriptions WHERE device_id = ?', params: [id] },
+    { sql: 'DELETE FROM devices WHERE id = ? AND revoked_at IS NOT NULL', params: [id] },
+    auditStatement(ctx, { event: 'device.remove', actor: `device:${a.device.id}`, result: 'ok', ip: a.ip, detail: { device: id } }),
+  ]);
+  return json({ ok: true });
+}
+
 // GET /api/vm — VM public keys, fingerprint and online status. Devices use the
 // keys only during pairing; afterwards they compare with their pinned copy.
 export async function handleVm(req: Request, ctx: AppContext): Promise<Response> {

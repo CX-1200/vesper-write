@@ -9,6 +9,7 @@ import { api, call, describeError, toError } from '../../client/api.ts';
 import type { Identity } from '../../client/identity.ts';
 import { Fingerprint, Gated, Page, time, useVesper } from '../../client/ui.tsx';
 import { DEVICE_NAME_MAX } from '@vesper/core/schemas';
+import { CONFIG } from '@vesper/core/config';
 
 interface Device {
   id: string;
@@ -53,6 +54,13 @@ function Devices({ identity, vmFingerprint }: { identity: Identity; vmFingerprin
     setConfirming(null);
     if (!r.ok) return setError(describeError(toError(r)));
     setRevoked(d);
+    load();
+  }
+
+  async function remove(d: Device) {
+    setError('');
+    const r = await call(identity, 'POST', `/api/devices/${d.id}/remove`, {});
+    if (!r.ok) return setError(describeError(toError(r)));
     load();
   }
 
@@ -117,6 +125,17 @@ function Devices({ identity, vmFingerprint }: { identity: Identity; vmFingerprin
                   <dt>Passkey</dt>
                   <dd>{d.has_passkey ? '有' : '无'}</dd>
                 </dl>
+                {d.revoked_at ? (
+                  <div className="actions">
+                    {Date.now() - d.revoked_at >= CONFIG.revokedDeviceRetentionMs ? (
+                      <button className="secondary" onClick={() => remove(d)}>
+                        从列表移除
+                      </button>
+                    ) : (
+                      <p className="small muted">撤销满 72 小时后（{time(d.revoked_at + CONFIG.revokedDeviceRetentionMs)}）可以从列表移除。</p>
+                    )}
+                  </div>
+                ) : null}
                 {!d.revoked_at ? (
                   renaming?.id === d.id ? (
                     <form className="actions" onSubmit={rename}>

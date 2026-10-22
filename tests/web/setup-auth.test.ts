@@ -296,3 +296,29 @@ test('renaming a revoked device is refused', async () => {
   assert.equal((await phone.req('POST', `/api/devices/${laptop.id}/rename`, { name: 'x' })).status, 409);
   vm.cleanup();
 });
+
+test('a revoked device can be removed from the list only after 72 hours', async () => {
+  const h = makeHarness();
+  const { vm, phone, secrets, totpSecret } = await fullSetup(h);
+  const laptop = await SimDevice.create(h, 'Laptop');
+  await laptop.req('POST', '/api/devices/enroll/start', { recovery_key: secrets.recovery_key, device: laptop.publicKeys });
+  // not revoked: refused
+  assert.equal((await phone.req('POST', `/api/devices/${laptop.id}/remove`, {})).status, 409);
+  assert.equal((await phone.req('POST', `/api/devices/${laptop.id}/revoke`, {})).status, 200);
+  // revoked, but within 72 hours: refused
+  h.clock.advance(72 * 3600_000 - 60_000);
+  assert.equal((await login(h, phone, totpSecret)).status, 200);
+  assert.equal((await phone.req('POST', `/api/devices/${laptop.id}/remove`, {})).status, 409);
+  // after 72 hours: removed, with its sessions; audited
+  h.clock.advance(60_000);
+  const r = await phone.req('POST', `/api/devices/${laptop.id}/remove`, {});
+  assert.equal(r.status, 200, JSON.stringify(r.json));
+  assert.equal((await h.sql('SELECT id FROM devices WHERE id = ?', [laptop.id])).length, 0);
+  assert.equal((await h.sql('SELECT device_id FROM sessions WHERE device_id = ?', [laptop.id])).length, 0);
+  assert.equal((await h.sql("SELECT event FROM audit_log WHERE event = 'device.remove'")).length, 1);
+  assert.equal((await phone.req('GET', '/api/devices')).json.devices.length, 1);
+  assert.equal((await phone.req('POST', `/api/devices/${laptop.id}/remove`, {})).status, 404);
+  // the phone itself (not revoked) can never be removed
+  assert.equal((await phone.req('POST', `/api/devices/${phone.id}/remove`, {})).status, 409);
+  vm.cleanup();
+});

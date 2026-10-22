@@ -28,6 +28,7 @@ export const EVENT_LABEL: Record<string, string> = {
   'device.vm_approve': 'VM 批准设备',
   'device.revoke': '撤销设备',
   'device.rename': '更改设备名称',
+  'device.remove': '移除已撤销的设备',
   'vm.register': 'VM 登记',
   'vm.r8': 'VM 拒绝处理（R8）',
   'ticket.create': '开 ticket',

@@ -83,6 +83,9 @@ export function NewSecrets({
               value={typed[k] ?? ''}
               onChange={(e) => setTyped({ ...typed, [k]: formatSecretInput(e.target.value) })}
             />
+            {(typed[k] ?? '').length === 4 && typed[k] !== lastGroup(values[k]!) ? (
+              <p className="small error">和上面「{INFO[k].title}」的最后 4 个字符不一样，请再对照一次。</p>
+            ) : null}
           </div>
         ))}
         <label className="inline">
@@ -92,6 +95,7 @@ export function NewSecrets({
       </fieldset>
       {extra}
       {error ? <p className="error">{error}</p> : null}
+      {!allTyped || !saved ? <p className="small muted">填对每一组的最后 4 个字符并打勾后，才能按下面的按钮。</p> : null}
       <div className="actions">
         <button type="submit" disabled={!allTyped || !saved || busy}>
           {busy ? '处理中…' : submitLabel}

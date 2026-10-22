@@ -188,7 +188,9 @@ export async function handleWorkerDeviceApproval(req: Request, ctx: AppContext):
   }
   const vmKey = await importVerifyKey(JSON.parse(a.vm.sign_public_key));
   const device = await getDevice(ctx, deviceId);
-  if (!device) return fail('not_found');
+  // A device removed from the list was revoked at least 72 hours earlier, so a
+  // late VM revocation for it has nothing left to do.
+  if (!device) return action === 'revoke' ? json({ ok: true, already: true }) : fail('not_found');
 
   if (action === 'approve') {
     let fingerprint: string;
